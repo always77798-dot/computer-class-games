@@ -24,6 +24,18 @@ export default function MapRescueGame({ onBackToPortal }) {
     setTimeout(() => setShowComboAnim(false), 500);
   }, [combo]);
 
+  // 新增：一般錯誤扣除 500 分，並中斷連擊
+  const applyMinorPenalty = useCallback(() => {
+    setScore(s => Math.max(0, s - 500));
+    setCombo(1);
+  }, []);
+
+    // 新增：中等錯誤扣除 2000 分，並中斷連擊
+  const applyMiddlePenalty = useCallback(() => {
+    setScore(s => Math.max(0, s - 2000));
+    setCombo(1);
+  }, []);
+
   const applyFailPenalty = useCallback(() => {
     setScore(s => Math.floor(s * 0.9)); // 扣除10%總分
     setCombo(1);
@@ -192,7 +204,7 @@ export default function MapRescueGame({ onBackToPortal }) {
       nextLevel('level2');
     } else {
       applyFailPenalty();
-      alert("哎呀！這不是我們的目的地，找找紅色的水滴標記！(扣除10%總分)");
+      alert("哎呀！這不是我們的目的地，找找紅色的水滴標記！(扣除 500 分)");
     }
   };
 
@@ -225,10 +237,10 @@ export default function MapRescueGame({ onBackToPortal }) {
   const handleL3LocationSelect = (loc) => {
     if (!l3Start) {
       if (loc === '土城國小') { setL3Start(loc); addScore(500); }
-      else { applyFailPenalty(); alert('起點設定錯誤，請看對話提示！(扣除10%總分)'); }
+      else { applyFailPenalty(); alert('起點設定錯誤，請看對話提示！(扣除 500 分)'); }
     } else if (!l3End) {
       if (loc === '土城圖書館') { setL3End(loc); addScore(500); }
-      else { applyFailPenalty(); alert('終點設定錯誤，請看對話提示！(扣除10%總分)'); }
+      else { applyFailPenalty(); alert('終點設定錯誤，請看對話提示！(扣除 500 分)'); }
     }
   };
   const handleL3Transport = (mode) => {
@@ -237,7 +249,7 @@ export default function MapRescueGame({ onBackToPortal }) {
       nextLevel('gameIntro');
     } else {
       applyFailPenalty();
-      alert("距離很近又想運動，選這個交通工具不對喔！(扣除10%總分)");
+      alert("距離很近又想運動，選這個交通工具不對喔！(扣除 500 分)");
     }
   };
 
@@ -514,7 +526,7 @@ export default function MapRescueGame({ onBackToPortal }) {
     } else {
       setQuizFeedback({ type: 'error', msg: currentQ.explanation });
       setQuizFails(prev => prev + 1);
-      applyFailPenalty();
+      applyMiddlePenalty();
     }
   };
 
