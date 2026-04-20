@@ -162,8 +162,15 @@ export default function MapRescueGame({ onBackToPortal }) {
     setG3Maze(generateMaze(size, size));
     setG3Pos({x: 1, y: 1});
     setG3Timer(isEasy ? 90 : 60);
-    const center = Math.floor(size / 2);
-    setG3GhostPos({ x: center, y: center });
+    
+    // 【修改】判斷是否為簡易模式：若是，則不生成鬼魂
+    if (isEasy) {
+      setG3GhostPos(null);
+    } else {
+      const center = Math.floor(size / 2);
+      setG3GhostPos({ x: center, y: center });
+    }
+    
     ghostLastPosRef.current = null;
     setG3State('playing');
   }, [generateMaze]);
