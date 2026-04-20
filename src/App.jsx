@@ -6,6 +6,7 @@ import {
 // 🌟 引入分離出去的小遊戲模組 (這些路徑需要你自己確保正確)
 import MouseSurvivalGame from './games/MouseSurvivalGame';
 import GoogleMagicAcademy from './games/GoogleMagicAcademy';
+import MapRescueGame from './games/MapRescueGame';
 import AiHeroGame from './games/AiHeroGame';
 import ChromeAgentGame from './games/ChromeAgentGame';
 import SpaceCampGame from './games/SpaceCampGame';
@@ -29,9 +30,18 @@ const GAMES_LIST = [
     description: '多項實作任務、刺激的雲端防禦戰與最終的魔法測驗！',
     icon: <span className="text-4xl leading-none">🪄</span>,
     color: 'bg-indigo-100 border-indigo-400 text-indigo-800',
-    tags: ['114-3下', '塔防遊戲', '雲端應用', '資訊安全'],
+    tags: ['114-3下', '尚未開放', '塔防遊戲', '雲端應用', '資訊安全'],
+    disabled: true 
+  },
+  { 
+    id: 'map-rescue', 
+    title: '地圖探險', 
+    description: '迷航救援大作戰！運用你的地圖超能力與連擊技巧完成任務！', 
+    icon: '🗺️', 
+    color: 'bg-blue-100 border-blue-400 text-blue-800', 
+    tags: ['Google 地圖', '街景', '路線規劃'], 
     statusBadge: { text: '新推出', type: 'new' },
-    disabled: false 
+    disabled: false  
   },
   {
     id: 'ai-heroes',
@@ -237,6 +247,9 @@ export default function App() {
         )}
         {activeView === 'google-magic-academy' && (
           <GoogleMagicAcademy onBackToPortal={() => setActiveView('home')} />
+        )}
+        {activeView === 'map-rescue' && (
+          <MapRescueGame onBackToPortal={() => setActiveView('home')} />
         )}
         {activeView === 'ai-heroes' && (
           <AiHeroGame onBackToPortal={() => setActiveView('home')} />
