@@ -27,14 +27,6 @@ export default function ChromeAgentGame({ onBackToPortal }) {
 
   return (
     <div className={`min-h-screen ${bgColor} ${textColor} p-2 md:p-6 transition-colors duration-700 font-sans selection:bg-emerald-500 selection:text-white relative overflow-hidden`}>
-      
-      {/* 修改 2：新增左上角「離開遊戲」按鈕 */}
-      <button 
-        onClick={onBackToPortal}
-        className="absolute top-4 left-4 z-50 bg-slate-800/80 hover:bg-slate-700 backdrop-blur-sm text-white px-4 py-2 rounded-full font-bold shadow-lg flex items-center gap-2 border border-slate-600 transition-transform hover:-translate-x-1"
-      >
-        <ChevronLeft className="w-5 h-5" /> 離開遊戲
-      </button>
 
       <div className="absolute inset-0 z-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'linear-gradient(#334155 1px, transparent 1px), linear-gradient(90deg, #334155 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
 
