@@ -179,6 +179,14 @@ export default function App() {
                 哲民老師的<span className="text-indigo-600">電腦課入口網</span>
               </span>
             </div>
+
+              <button 
+                onClick={toggleFullscreen}
+                className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 px-4 py-2 rounded-full text-white font-bold text-sm transition-all active:scale-95 shadow-md"
+              >
+                {isFullscreen ? <Minimize className="w-4 h-4 text-emerald-400" /> : <Maximize className="w-4 h-4 text-blue-400" />}
+                <span className="hidden sm:inline">{isFullscreen ? '退出全螢幕' : '全螢幕模式'}</span>
+              </button>
             
             {activeView !== 'home' && (
               <button 
