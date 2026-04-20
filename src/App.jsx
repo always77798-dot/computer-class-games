@@ -30,6 +30,7 @@ const GAMES_LIST = [
     icon: <span className="text-4xl leading-none">🪄</span>,
     color: 'bg-indigo-100 border-indigo-400 text-indigo-800',
     tags: ['114-3下', '塔防遊戲', '雲端應用', '資訊安全'],
+    statusBadge: { text: '新推出', type: 'new' },
     disabled: false 
   },
   {
@@ -39,6 +40,7 @@ const GAMES_LIST = [
     icon: <Sparkles className="w-8 h-8 text-yellow-500" />,
     color: 'bg-gradient-to-br from-indigo-400 to-purple-800 text-white border-transparent',
     tags: ['114-3下', '動作闖關', 'AI模型知識'],
+    statusBadge: { text: '熱門', type: 'hot' },
     disabled: false
   },
   { // 修正了原本這裡多一個 { 的語法錯誤
@@ -96,6 +98,16 @@ const PortalHome = ({ onSelectGame }) => {
             `}
             onClick={() => !game.disabled && onSelectGame(game.id)}
           >
+            {game.statusBadge && (
+              <span className={`
+                absolute top-0 right-0 px-4 py-1.5 text-xs font-black tracking-wider shadow-md z-20 rounded-bl-2xl
+                ${game.statusBadge.type === 'new' ? 'bg-red-500 text-white animate-pulse' : ''}
+                ${game.statusBadge.type === 'hot' ? 'bg-orange-500 text-white' : ''}
+                ${game.statusBadge.type === 'recommend' ? 'bg-blue-500 text-white' : ''}
+              `}>
+                {game.statusBadge.text}
+              </span>
+            )}
             <div className={`h-32 ${game.color} flex items-center justify-center relative overflow-hidden`}>
               <div className="absolute inset-0 bg-black/10"></div>
               <div className="relative z-10 p-4 bg-white/20 backdrop-blur-sm rounded-2xl shadow-sm border border-white/30 transform transition-transform group-hover:scale-110">
