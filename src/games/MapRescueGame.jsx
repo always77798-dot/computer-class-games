@@ -79,6 +79,7 @@ export default function MapRescueGame({ onBackToPortal }) {
   const [g3Maze, setG3Maze] = useState([]);
   const [g3Timer, setG3Timer] = useState(60);
   const [g3GhostPos, setG3GhostPos] = useState(null);
+  const ghostLastPosRef = useRef(null);
   const touchStartRef = useRef({x: 0, y: 0});
 
   // ---------------- Text & Configs ----------------
@@ -162,6 +163,7 @@ export default function MapRescueGame({ onBackToPortal }) {
     setG3Timer(isEasy ? 90 : 60);
     const center = Math.floor(size / 2);
     setG3GhostPos({ x: center, y: center });
+    ghostLastPosRef.current = null;
     setG3State('playing');
   }, [generateMaze]);
 
@@ -400,23 +402,30 @@ export default function MapRescueGame({ onBackToPortal }) {
     const ghostInterval = setInterval(() => {
       setG3GhostPos(prev => {
         if (!prev) return prev;
-        // 找出鬼魂四周可走的道路 (不是牆壁 === 1)
+        // 1. 找出鬼魂四周可走的道路 (不是牆壁 === 1)
         const dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]];
-        const validMoves = dirs.map(([dx, dy]) => ({ x: prev.x + dx, y: prev.y + dy }))
+        let validMoves = dirs.map(([dx, dy]) => ({ x: prev.x + dx, y: prev.y + dy }))
           .filter(p => p.x >= 0 && p.y >= 0 && p.y < g3Maze.length && p.x < g3Maze[0].length && g3Maze[p.y][p.x] !== 1);
         
+        // 2. 防打轉機制：如果有超過一條路可以走，就過濾掉「上一步」的座標 (不走回頭路)
+        if (validMoves.length > 1 && ghostLastPosRef.current) {
+           validMoves = validMoves.filter(p => p.x !== ghostLastPosRef.current.x || p.y !== ghostLastPosRef.current.y);
+        }
+
         if (validMoves.length > 0) {
           const nextPos = validMoves[Math.floor(Math.random() * validMoves.length)];
-          // 鬼魂主動撞到玩家
+          // 3. 鬼魂主動撞到玩家
           if (nextPos.x === g3Pos.x && nextPos.y === g3Pos.y) {
             setG3State('caught');
             applyFailPenalty();
           }
+          // 4. 紀錄本次的起始點，作為下一次的「上一步」
+          ghostLastPosRef.current = prev; 
           return nextPos;
         }
         return prev;
       });
-    }, 800); 
+    }, 400); // 【修改】將 800 改為 400 毫秒，速度提升兩倍！
 
     return () => clearInterval(ghostInterval);
   }, [gameState, g3State, g3Maze, g3Pos, applyFailPenalty]);
