@@ -39,7 +39,7 @@ const GAMES_LIST = [
     description: '迷航救援大作戰！運用你的地圖超能力與連擊技巧完成任務！', 
     icon: '🗺️', 
     color: 'bg-blue-100 border-blue-400 text-blue-800', 
-    tags: ['Google 地圖', '街景', '路線規劃'], 
+    tags: ['114-3下', '互動闖關', 'Google 地圖'], 
     statusBadge: { text: '新推出', type: 'new' },
     disabled: false  
   },
