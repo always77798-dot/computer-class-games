@@ -90,7 +90,7 @@ export default function MapRescueGame({ onBackToPortal }) {
   const [g3Pos, setG3Pos] = useState({x: 1, y: 1});
   const [g3Maze, setG3Maze] = useState([]);
   const [g3Timer, setG3Timer] = useState(60);
-  const [g3GhostPos, setG3GhostPos] = useState(null);
+  const [g3Ghosts, setG3Ghosts] = useState([]);
   const ghostLastPosRef = useRef(null);
   const touchStartRef = useRef({x: 0, y: 0});
 
@@ -168,23 +168,39 @@ export default function MapRescueGame({ onBackToPortal }) {
   }, []);
 
   const initG3 = useCallback((fails) => {
-    const isEasy = fails >= 3;
-    const size = isEasy ? 11 : 21; 
-    setG3Maze(generateMaze(size, size));
-    setG3Pos({x: 1, y: 1});
-    setG3Timer(isEasy ? 90 : 60);
-    
-    // 判斷是否為簡易模式：若是，則不生成鬼魂
-    if (isEasy) {
-      setG3GhostPos(null);
-    } else {
-      const center = Math.floor(size / 2);
-      setG3GhostPos({ x: center, y: center });
-    }
-    
-    ghostLastPosRef.current = null;
-    setG3State('playing');
-  }, [generateMaze]);
+  const isEasy = fails >= 3;
+  const size = isEasy ? 11 : 21;
+  const center = Math.floor(size / 2);
+  
+  setG3Maze(generateMaze(size, size));
+  setG3Pos({x: 1, y: 1});
+  setG3Timer(isEasy ? 90 : 60);
+
+  if (isEasy) {
+    setG3Ghosts([]); // 簡易模式沒鬼
+  } else {
+    // 定義兩隻不同性格的鬼
+    setG3Ghosts([
+      { 
+        id: 'fast-ghost', 
+        x: center, 
+        y: center, 
+        color: 'text-purple-500', 
+        speed: 200, // 較快
+        lastPos: null 
+      },
+      { 
+        id: 'slow-ghost', 
+        x: center + 2, 
+        y: center, 
+        color: 'text-pink-400', 
+        speed: 400, // 較慢
+        lastPos: null 
+      }
+    ]);
+  }
+  setG3State('playing');
+}, [generateMaze]);
 
   useEffect(() => {
     if (prevGameState.current !== gameState) {
@@ -416,38 +432,50 @@ export default function MapRescueGame({ onBackToPortal }) {
 
   // --- 鬼魂移動引擎 ---
   useEffect(() => {
-    if (gameState !== 'game3' || g3State !== 'playing' || !g3GhostPos || g3Maze.length === 0) return;
-
-    const ghostInterval = setInterval(() => {
-      setG3GhostPos(prev => {
-        if (!prev) return prev;
-        // 1. 找出鬼魂四周可走的道路 (不是牆壁 === 1)
-        const dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]];
-        let validMoves = dirs.map(([dx, dy]) => ({ x: prev.x + dx, y: prev.y + dy }))
-          .filter(p => p.x >= 0 && p.y >= 0 && p.y < g3Maze.length && p.x < g3Maze[0].length && g3Maze[p.y][p.x] !== 1);
-        
-        // 2. 防打轉機制：如果有超過一條路可以走，就過濾掉「上一步」的座標 (不走回頭路)
-        if (validMoves.length > 1 && ghostLastPosRef.current) {
-           validMoves = validMoves.filter(p => p.x !== ghostLastPosRef.current.x || p.y !== ghostLastPosRef.current.y);
-        }
-
-        if (validMoves.length > 0) {
-          const nextPos = validMoves[Math.floor(Math.random() * validMoves.length)];
-          // 3. 鬼魂主動撞到玩家
-          if (nextPos.x === g3Pos.x && nextPos.y === g3Pos.y) {
-            setG3State('caught');
-            applyMiddlePenalty();
+    if (gameState !== 'game3' || g3State !== 'playing' || g3Ghosts.length === 0) return;
+  
+    // 為每隻鬼建立獨立的 setInterval
+    const timers = g3Ghosts.map((ghost, index) => {
+      return setInterval(() => {
+        setG3Ghosts(currentGhosts => {
+          const updatedGhosts = [...currentGhosts];
+          const g = updatedGhosts[index];
+          if (!g) return updatedGhosts;
+  
+          const dirs = [[0, -1], [0, 1], [-1, 0], [1, 0]];
+          let validMoves = dirs.map(([dx, dy]) => ({ x: g.x + dx, y: g.y + dy }))
+            .filter(p => p.x >= 0 && p.y >= 0 && p.y < g3Maze.length && p.x < g3Maze[0].length && g3Maze[p.y][p.x] !== 1);
+  
+          // 避免打轉邏輯
+          if (validMoves.length > 1 && g.lastPos) {
+            validMoves = validMoves.filter(p => p.x !== g.lastPos.x || p.y !== g.lastPos.y);
           }
-          // 4. 紀錄本次的起始點，作為下一次的「上一步」
-          ghostLastPosRef.current = prev; 
-          return nextPos;
-        }
-        return prev;
-      });
-    }, 200); 
-
-    return () => clearInterval(ghostInterval);
-  }, [gameState, g3State, g3Maze, g3Pos, applyFailPenalty]);
+  
+          if (validMoves.length > 0) {
+            const nextPos = validMoves[Math.floor(Math.random() * validMoves.length)];
+            
+            // 碰撞玩家判定
+            if (nextPos.x === g3Pos.x && nextPos.y === g3Pos.y) {
+              setG3State('caught');
+              applyMiddlePenalty();
+            }
+  
+            // 更新這隻鬼的資料
+            updatedGhosts[index] = { 
+              ...g, 
+              x: nextPos.x, 
+              y: nextPos.y, 
+              lastPos: { x: g.x, y: g.y } 
+            };
+          }
+          return updatedGhosts;
+        });
+      }, ghost.speed); // 使用每隻鬼各自定義的 speed
+    });
+  
+    // 清除所有定時器
+    return () => timers.forEach(t => clearInterval(t));
+  }, [gameState, g3State, g3Maze, g3Pos, g3Ghosts.length]); // 注意依賴項
 
   const handleMazeMove = useCallback((dx, dy) => {
     if(g3Maze.length === 0 || g3State !== 'playing') return;
@@ -456,7 +484,7 @@ export default function MapRescueGame({ onBackToPortal }) {
     if (nx >= 0 && ny >= 0 && ny < g3Maze.length && nx < g3Maze[0].length) {
       if (g3Maze[ny][nx] !== 1) { 
         // 碰撞鬼魂判定
-        if (g3GhostPos && nx === g3GhostPos.x && ny === g3GhostPos.y) {
+        if (g3Ghosts.some(g => nx === g.x && ny === g.y)) {
           setG3State('caught');
           applyMiddlePenalty();
           return;
@@ -1006,11 +1034,14 @@ export default function MapRescueGame({ onBackToPortal }) {
                                   <User className={`${isSmall ? 'w-4 h-4' : 'w-2 h-2 md:w-3 md:h-3'} text-yellow-800`} fill="currentColor"/>
                                 </div>
                              )}
-                             {g3GhostPos?.x === x && g3GhostPos?.y === y && (
-                                <div className={`bg-purple-500/80 rounded-t-full rounded-b-md ${isSmall ? 'w-5 h-5 md:w-8 md:h-8' : 'w-3 h-3 md:w-5 md:h-5'} flex items-center justify-center shadow-lg z-10 animate-bounce`}>
-                                  <Ghost className={`${isSmall ? 'w-4 h-4' : 'w-2 h-2 md:w-3 md:h-3'} text-white`} fill="currentColor"/>
-                                </div>
-                             )}
+                             {/* 在迷宮 cell 渲染邏輯內 */}
+                             {g3Ghosts.map(ghost => (
+                               ghost.x === x && ghost.y === y && (
+                                 <div key={ghost.id} className={`absolute bg-white/20 rounded-t-full rounded-b-md ${isSmall ? 'w-5 h-5 md:w-8 md:h-8' : 'w-3 h-3 md:w-5 md:h-5'} flex items-center justify-center shadow-lg z-10 animate-bounce`}>
+                                   <Ghost className={`${isSmall ? 'w-4 h-4' : 'w-2 h-2 md:w-3 md:h-3'} ${ghost.color}`} fill="currentColor"/>
+                                 </div>
+                               )
+                             ))}
                            </div>
                          );
                        })}
