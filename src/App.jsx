@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 
 // 🌟 引入分離出去的小遊戲模組
+import MouseSurvivalGame from './games/MouseSurvivalGame';
 import GoogleMagicAcademy from './games/GoogleMagicAcademy';
 import AiHeroGame from './games/AiHeroGame';
 import ChromeAgentGame from './games/ChromeAgentGame';
@@ -13,6 +14,15 @@ import SpaceCampGame from './games/SpaceCampGame';
 // 1. 遊戲資料設定區 (可在此新增遊戲資訊)
 // ==========================================
 const GAMES_LIST = [
+  {
+    id: 'mouse-survival',
+    title: '鼠鼠的文件生存戰',
+    description: '在 Google 文件模擬器中閃避怪獸，體驗刺激的割草生存戰與知識大考驗！',
+    icon: '🐹', // 使用鼠鼠 Emoji
+    color: 'bg-amber-100 border-amber-400 text-amber-800',
+    tags: ['生存割草', 'Google文件'],
+    disabled: true
+  }
   { 
     id: 'google-magic-academy',
     title: '雲端魔法學院',
@@ -208,6 +218,10 @@ export default function App() {
         )}
         
         {/* 🌟 在此配置路由：載入獨立的小遊戲組件 */}
+
+        {activeView === 'mouse-survival' && (
+          <MouseSurvivalGame onBackToPortal={() => setActiveView('home')} />
+        )}
 
         {activeView === 'google-magic-academy' && (
           <GoogleMagicAcademy onBackToPortal={() => setActiveView('home')} />
