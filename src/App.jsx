@@ -61,7 +61,7 @@ const PortalHome = ({ onSelectGame }) => {
       <div className="bg-white rounded-3xl p-8 md:p-12 shadow-xl border-4 border-indigo-100 flex flex-col md:flex-row items-center gap-8 mb-12">
         <div className="flex-1 text-center md:text-left">
           <span className="inline-block bg-indigo-100 text-indigo-800 px-4 py-1 rounded-full text-sm font-bold tracking-widest mb-4">W E L C O M E</span>
-          <h1 className="text-4xl md:text-6xl font-black text-gray-800 mb-4 leading-tight">
+          <h1 className="text-3xl md:text-5xl font-black text-gray-800 mb-4 leading-tight">
             準備好展開你的<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">數位學習冒險</span>了嗎？
           </h1>
           <p className="text-xl text-gray-600 font-medium">請從下方選擇你想挑戰的遊戲關卡，透過遊玩來複習電腦課所學的知識吧！</p>
