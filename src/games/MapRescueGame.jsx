@@ -4,7 +4,7 @@ import {
   Map as MapIcon, CheckCircle, AlertCircle, Play, Send, Trophy, Ghost,
   Sparkles, Pointer, MousePointer2, Flag, ArrowRight, ArrowLeft, Building, 
   LocateFixed, ArrowUp, Store, Ban, TreePine, Bus, Camera, MessageSquare, 
-  Smartphone, Gamepad2, ArrowDown, TriangleAlert, RotateCcw, Timer, Flame
+  Smartphone, Gamepad2, ArrowDown, AlertTriangle, RotateCcw, Timer, Flame
 } from 'lucide-react';
 
 // 🌟 修改 1：更改元件名稱，並接收 onBackToPortal 屬性
@@ -881,7 +881,7 @@ export default function MapRescueGame({ onBackToPortal }) {
                        
                        {g2Items.map(item => (
                          <div key={item.id} className="absolute w-1/3 flex items-center justify-center transition-all duration-75 ease-linear" style={{ left: `${item.lane * 33.33}%`, top: `${item.y}%` }}>
-                           {item.type === 'cone' ? <TriangleAlert className="w-10 h-10 text-orange-500 fill-orange-400 drop-shadow-md" /> : <MapPin className="w-10 h-10 text-red-500 fill-white drop-shadow-md animate-bounce" />}
+                           {item.type === 'cone' ? <AlertTriangle className="w-10 h-10 text-orange-500 fill-orange-400 drop-shadow-md" /> : <MapPin className="w-10 h-10 text-red-500 fill-white drop-shadow-md animate-bounce" />}
                          </div>
                        ))}
                        <div className="absolute bottom-6 w-1/3 flex items-center justify-center transition-all duration-150 z-20" style={{ left: `${g2CarLane * 33.33}%` }}>
@@ -899,7 +899,7 @@ export default function MapRescueGame({ onBackToPortal }) {
                   )}
                   {g2State === 'gameover' && (
                      <div className="absolute inset-0 bg-red-900/80 flex flex-col items-center justify-center z-50 text-white animate-fade-in p-6 text-center">
-                        <TriangleAlert className="w-20 h-20 text-orange-400 mb-4" />
+                        <AlertTriangle className="w-20 h-20 text-orange-400 mb-4" />
                         <h3 className="text-3xl font-bold mb-6">車子拋錨啦！</h3>
                         <button onClick={handleG2Retry} className="bg-white text-red-800 px-6 py-3 rounded-full font-bold flex items-center gap-2 hover:scale-105 transition shadow-lg">
                           <RotateCcw className="w-5 h-5"/> 重新挑戰 (扣除 10% 總分)
