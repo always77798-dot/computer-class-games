@@ -32,6 +32,7 @@ export default function MapRescueGame({ onBackToPortal }) {
   // --- Quiz & Form State ---
   const [quizIndex, setQuizIndex] = useState(0);
   const [quizFeedback, setQuizFeedback] = useState(null);
+  const [quizFails, setQuizFails] = useState(0);
   const [studentId, setStudentId] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -425,7 +426,7 @@ export default function MapRescueGame({ onBackToPortal }) {
         }
         return prev;
       });
-    }, 400); // 【修改】將 800 改為 400 毫秒，速度提升兩倍！
+    }, 200); // 【修改】將 800 改為 400 毫秒，速度提升兩倍！
 
     return () => clearInterval(ghostInterval);
   }, [gameState, g3State, g3Maze, g3Pos, applyFailPenalty]);
