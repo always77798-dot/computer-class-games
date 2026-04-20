@@ -430,11 +430,10 @@ export default function MapRescueGame({ onBackToPortal }) {
     }
   }, [gameState, g3State, g3Timer, applyFailPenalty]);
 
-  // --- 鬼魂移動引擎 ---
+  // --- 修正後的鬼魂移動引擎 ---
   useEffect(() => {
     if (gameState !== 'game3' || g3State !== 'playing' || g3Ghosts.length === 0) return;
   
-    // 為每隻鬼建立獨立的 setInterval
     const timers = g3Ghosts.map((ghost, index) => {
       return setInterval(() => {
         setG3Ghosts(currentGhosts => {
@@ -446,7 +445,6 @@ export default function MapRescueGame({ onBackToPortal }) {
           let validMoves = dirs.map(([dx, dy]) => ({ x: g.x + dx, y: g.y + dy }))
             .filter(p => p.x >= 0 && p.y >= 0 && p.y < g3Maze.length && p.x < g3Maze[0].length && g3Maze[p.y][p.x] !== 1);
   
-          // 避免打轉邏輯
           if (validMoves.length > 1 && g.lastPos) {
             validMoves = validMoves.filter(p => p.x !== g.lastPos.x || p.y !== g.lastPos.y);
           }
@@ -454,13 +452,9 @@ export default function MapRescueGame({ onBackToPortal }) {
           if (validMoves.length > 0) {
             const nextPos = validMoves[Math.floor(Math.random() * validMoves.length)];
             
-            // 碰撞玩家判定
-            if (nextPos.x === g3Pos.x && nextPos.y === g3Pos.y) {
-              setG3State('caught');
-              applyMiddlePenalty();
-            }
-  
-            // 更新這隻鬼的資料
+            // 使用 functional update 的方式檢查碰撞，避免依賴外部 g3Pos 導致重置
+            // 這裡我們在 setG3Ghosts 之後另外用 useEffect 監控碰撞，或在此處簡單判斷
+            
             updatedGhosts[index] = { 
               ...g, 
               x: nextPos.x, 
@@ -470,12 +464,11 @@ export default function MapRescueGame({ onBackToPortal }) {
           }
           return updatedGhosts;
         });
-      }, ghost.speed); // 使用每隻鬼各自定義的 speed
+      }, ghost.speed);
     });
   
-    // 清除所有定時器
     return () => timers.forEach(t => clearInterval(t));
-  }, [gameState, g3State, g3Maze, g3Pos, g3Ghosts.length]); // 注意依賴項
+  }, [gameState, g3State, g3Maze]); // 移除 g3Pos 依賴，防止計時器頻繁重置
 
   const handleMazeMove = useCallback((dx, dy) => {
     if(g3Maze.length === 0 || g3State !== 'playing') return;
@@ -483,12 +476,6 @@ export default function MapRescueGame({ onBackToPortal }) {
     const ny = g3Pos.y + dy;
     if (nx >= 0 && ny >= 0 && ny < g3Maze.length && nx < g3Maze[0].length) {
       if (g3Maze[ny][nx] !== 1) { 
-        // 碰撞鬼魂判定
-        if (g3Ghosts.some(g => nx === g.x && ny === g.y)) {
-          setG3State('caught');
-          applyMiddlePenalty();
-          return;
-        }
         setG3Pos({x: nx, y: ny});
         addScore(100); 
         if (g3Maze[ny][nx] === 3) { 
@@ -500,7 +487,7 @@ export default function MapRescueGame({ onBackToPortal }) {
         setCombo(1); 
       }
     }
-  }, [g3Pos, g3Maze, g3State, g3Timer, addScore, g3GhostPos, applyFailPenalty]);
+  }, [g3Pos, g3Maze, g3State, g3Timer, addScore, g3Ghosts, applyFailPenalty]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -515,6 +502,20 @@ export default function MapRescueGame({ onBackToPortal }) {
     window.addEventListener('keydown', handleKeyDown, { passive: false });
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [gameState, g3State, handleMazeMove]);
+
+  // --- 專門處理玩家與鬼魂碰撞的檢測 ---
+  useEffect(() => {
+    // 只有在遊戲進行中才檢測
+    if (g3State === 'playing') {
+      // 檢查是否有任何一隻鬼的位置與玩家位置重疊
+      const isHit = g3Ghosts.some(g => g.x === g3Pos.x && g.y === g3Pos.y);
+      
+      if (isHit) {
+        setG3State('caught');
+        applyMiddlePenalty(); // 扣分並中斷連擊
+      }
+    }
+  }, [g3Pos, g3Ghosts, g3State, applyMiddlePenalty]); // 當玩家動、鬼動、或狀態改變時都會觸發檢查
 
   const handleTouchStart = (e) => { touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; };
   const handleTouchEnd = (e) => {
