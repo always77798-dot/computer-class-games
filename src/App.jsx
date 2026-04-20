@@ -37,7 +37,7 @@ const GAMES_LIST = [
     title: 'AI 小尖兵課堂測驗',
     description: '認識 ChatGPT、Gemini、Copilot 等 AI 英雄，並透過闖關與問答完成測驗！',
     icon: <Sparkles className="w-8 h-8 text-yellow-500" />,
-    color: 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-transparent',
+    color: 'bg-gradient-to-br from-indigo-400 to-purple-800 text-white border-transparent',
     tags: ['動作闖關', 'AI模型知識'],
     disabled: false
   },
