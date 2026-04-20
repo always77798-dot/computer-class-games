@@ -20,9 +20,9 @@ const GAMES_LIST = [
     description: '在 Google 文件模擬器中閃避怪獸，體驗刺激的割草生存戰與知識大考驗！',
     icon: '🐹', // 使用鼠鼠 Emoji
     color: 'bg-amber-100 border-amber-400 text-amber-800',
-    tags: ['生存割草', 'Google文件'],
+    tags: ['尚未開放', '敬請期待', '生存割草', 'Google文件'],
     disabled: true
-  }
+  },
   { 
     id: 'google-magic-academy',
     title: '雲端魔法學院',
