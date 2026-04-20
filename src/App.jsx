@@ -6,6 +6,7 @@ import {
 // 🌟 引入分離出去的小遊戲模組
 import AiHeroGame from './games/AiHeroGame';
 import ChromeAgentGame from './games/ChromeAgentGame';
+import SpaceCampGame from './games/SpaceCampGame';
 
 // ==========================================
 // 1. 遊戲資料設定區 (可在此新增遊戲資訊)
@@ -26,18 +27,18 @@ const GAMES_LIST = [
     description: '潛入網路世界！跟著特務一起學習精準搜尋、建立百寶箱與無痕隱身術。',
     icon: <span className="text-4xl leading-none">🕵️‍♂️</span>,
     color: 'bg-emerald-100 border-emerald-400 text-emerald-800',
-    tags: ['滑塊拼圖', '隱私保護', '網路安全'],
+    tags: ['滑塊拼圖', '隱私保護', '網路安全', '瀏覽器操作'],
     disabled: false
   },
-  {
-    id: 'coming-soon-2',
-    title: '網路安全大挑戰',
-    description: '（開發中）分辨釣魚網站與詐騙訊息，成為網路安全大師。',
-    icon: <ShieldAlert className="w-8 h-8 text-green-500" />,
-    color: 'bg-gradient-to-br from-gray-400 to-gray-500',
-    tags: ['情境模擬', '即將推出'],
-    disabled: true
-  }
+  { 
+  id: 'space-camp', 
+  title: '星際探險特訓營', 
+  description: '跟著特務一起完成 4 項基地訓練：攔截IP、視窗縮放、自訂Chrome與引擎測速！', 
+  icon: '🚀', 
+  color: 'bg-blue-100 border-blue-400 text-blue-800', 
+  tags: ['互動闖關', '瀏覽器操作','網路基礎知識'], 
+  disabled: false 
+}
 ];
 
 // ==========================================
@@ -166,6 +167,10 @@ export default function App() {
         {/* 🌟 新增的網路小特務路由顯示邏輯 */}
         {activeView === 'chrome-agent' && (
           <ChromeAgentGame onBackToPortal={() => setActiveView('home')} />
+        )}
+
+        {activeView === 'space-camp' && (
+          <SpaceCampGame onBackToPortal={() => setActiveView('home')} />
         )}
 
       </main>
