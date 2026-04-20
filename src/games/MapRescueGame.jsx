@@ -1060,10 +1060,33 @@ export default function MapRescueGame({ onBackToPortal }) {
               
               {!submitted ? (
                 <div className="bg-sky-50 p-5 md:p-8 rounded-3xl max-w-sm mx-auto border-2 border-sky-200 shadow-lg mt-6 md:mt-8 relative">
-                   {/* ... 填寫學號表單部分維持不變 ... */}
-                   <button onClick={submitForm} disabled={studentId.length !== 5 || isSubmitting} className="w-full flex items-center justify-center gap-2 md:gap-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 text-white px-4 py-3 md:px-6 md:py-4 rounded-2xl text-lg md:text-xl font-bold transition-all shadow-lg disabled:opacity-50 transform hover:-translate-y-1">
-                     {isSubmitting ? <span className="animate-pulse">傳送中...</span> : <>確認送出成績</>}
-                   </button>
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-3 py-1 md:px-4 md:py-1 rounded-full text-xs md:text-sm font-bold shadow-md whitespace-nowrap">最後一步</div>
+                  <h3 className="text-lg md:text-xl font-bold text-sky-900 mb-4 flex items-center justify-center gap-2"><Send className="w-5 h-5 md:w-6 md:h-6" /> 登錄魔法成績</h3>
+                  
+                  <div className="space-y-4 md:space-y-5">
+                    <div>
+                      <label className="block text-left text-xs md:text-sm font-bold text-sky-800 mb-2 pl-2">請輸入 5 碼學號：</label>
+                      <input 
+                        type="text" 
+                        value={studentId} 
+                        onChange={(e) => setStudentId(e.target.value.replace(/\D/g, '').slice(0, 5))} 
+                        placeholder="例如：11205" 
+                        maxLength={5} 
+                        className="w-full text-center text-3xl md:text-4xl tracking-widest font-black py-2 md:py-3 rounded-2xl border-4 border-white focus:border-blue-400 focus:ring-4 ring-blue-100 outline-none shadow-inner bg-white/80" 
+                      />
+                      {studentId.length > 0 && studentId.length < 5 && (
+                        <p className="text-red-500 text-xs md:text-sm font-bold mt-2 animate-pulse">長度不夠！必須剛好 5 個數字喔！</p>
+                      )}
+                    </div>
+                    
+                    <button 
+                      onClick={submitForm} 
+                      disabled={studentId.length !== 5 || isSubmitting} 
+                      className="w-full flex items-center justify-center gap-2 md:gap-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 text-white px-4 py-3 md:px-6 md:py-4 rounded-2xl text-lg md:text-xl font-bold transition-all shadow-lg disabled:opacity-50 disabled:grayscale transform hover:-translate-y-1 active:translate-y-0"
+                    >
+                      {isSubmitting ? <span className="animate-pulse">傳送中...</span> : <>確認送出成績</>}
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="bg-green-50 p-6 md:p-8 rounded-3xl max-w-sm mx-auto border-4 border-green-300 mt-6 md:mt-8 shadow-inner relative overflow-hidden animate-fade-in flex flex-col items-center">
