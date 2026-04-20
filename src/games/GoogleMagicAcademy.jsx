@@ -604,16 +604,6 @@ export default function GoogleMagicAcademy({ onBackToPortal }) {
         {/* Header */}
         <div className="bg-indigo-600 p-6 text-white flex justify-between items-center relative overflow-hidden">
           <Sparkles className="absolute top-4 left-4 text-yellow-300 w-8 h-8 animate-pulse" />
-          
-          {/* 🌟 新增：返回大廳按鈕 */}
-          {onBackToPortal && (
-            <button 
-              onClick={onBackToPortal}
-              className="absolute top-4 left-14 z-10 bg-indigo-700 hover:bg-indigo-800 border-2 border-indigo-400 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center transition"
-            >
-              ⬅️ 返回大廳
-            </button>
-          )}
 
           <div className="flex-1 text-center">
              <h1 className="text-3xl font-extrabold tracking-wide drop-shadow-md">🪄 哲民老師的雲端魔法學院 🪄</h1>
