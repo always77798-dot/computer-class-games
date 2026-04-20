@@ -1130,7 +1130,7 @@ export default function MapRescueGame({ onBackToPortal }) {
                         type="text" 
                         value={studentId} 
                         onChange={(e) => setStudentId(e.target.value.replace(/\D/g, '').slice(0, 5))} 
-                        placeholder="例如：11205" 
+                        placeholder="例如：30130" 
                         maxLength={5} 
                         className="w-full text-center text-3xl md:text-4xl tracking-widest font-black py-2 md:py-3 rounded-2xl border-4 border-white focus:border-blue-400 focus:ring-4 ring-blue-100 outline-none shadow-inner bg-white/80" 
                       />
