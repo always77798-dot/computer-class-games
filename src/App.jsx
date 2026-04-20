@@ -5,6 +5,7 @@ import {
 
 // 🌟 引入分離出去的小遊戲模組
 import AiHeroGame from './games/AiHeroGame';
+import ChromeAgentGame from './games/ChromeAgentGame';
 
 // ==========================================
 // 1. 遊戲資料設定區 (可在此新增遊戲資訊)
@@ -16,16 +17,17 @@ const GAMES_LIST = [
     description: '認識 ChatGPT、Gemini、Copilot 等 AI 英雄，並透過闖關與問答完成測驗！',
     icon: <Sparkles className="w-8 h-8 text-yellow-500" />,
     color: 'bg-gradient-to-br from-indigo-500 to-purple-600',
-    tags: ['動作闖關', '知識問答']
+    tags: ['動作闖關', 'AI模型知識'],
+    disabled: false
   },
-  {
-    id: 'coming-soon-1',
-    title: '鍵盤英打保衛戰',
-    description: '（開發中）外星人來襲！輸入正確的英文字母發射導彈保衛地球。',
-    icon: <Code className="w-8 h-8 text-blue-500" />,
-    color: 'bg-gradient-to-br from-gray-400 to-gray-500',
-    tags: ['打字練習', '即將推出'],
-    disabled: true
+  { // 修正了原本這裡多一個 { 的語法錯誤
+    id: 'chrome-agent',
+    title: '網路小特務探險指南',
+    description: '潛入網路世界！跟著特務一起學習精準搜尋、建立百寶箱與無痕隱身術。',
+    icon: <span className="text-4xl leading-none">🕵️‍♂️</span>,
+    color: 'bg-emerald-100 border-emerald-400 text-emerald-800',
+    tags: ['滑塊拼圖', '隱私保護', '網路安全'],
+    disabled: false
   },
   {
     id: 'coming-soon-2',
@@ -159,6 +161,11 @@ export default function App() {
         {/* 🌟 在此配置路由：載入獨立的小遊戲組件 */}
         {activeView === 'ai-heroes' && (
           <AiHeroGame onBackToPortal={() => setActiveView('home')} />
+        )}
+
+        {/* 🌟 新增的網路小特務路由顯示邏輯 */}
+        {activeView === 'chrome-agent' && (
+          <ChromeAgentGame onBackToPortal={() => setActiveView('home')} />
         )}
 
       </main>
