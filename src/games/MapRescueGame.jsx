@@ -7,7 +7,6 @@ import {
   Smartphone, Gamepad2, ArrowDown, AlertTriangle, RotateCcw, Timer, Flame
 } from 'lucide-react';
 
-// 🌟 修改 1：更改元件名稱，並接收 onBackToPortal 屬性
 export default function MapRescueGame({ onBackToPortal }) {
   const [gameState, setGameState] = useState('intro');
   const prevGameState = useRef('intro');
@@ -175,7 +174,7 @@ export default function MapRescueGame({ onBackToPortal }) {
     setG3Pos({x: 1, y: 1});
     setG3Timer(isEasy ? 90 : 60);
     
-    // 【修改】判斷是否為簡易模式：若是，則不生成鬼魂
+    // 判斷是否為簡易模式：若是，則不生成鬼魂
     if (isEasy) {
       setG3GhostPos(null);
     } else {
@@ -445,7 +444,7 @@ export default function MapRescueGame({ onBackToPortal }) {
         }
         return prev;
       });
-    }, 200); // 【修改】將 800 改為 400 毫秒，速度提升兩倍！
+    }, 200); 
 
     return () => clearInterval(ghostInterval);
   }, [gameState, g3State, g3Maze, g3Pos, applyFailPenalty]);
@@ -1124,7 +1123,6 @@ export default function MapRescueGame({ onBackToPortal }) {
                   <h3 className="text-xl md:text-2xl font-bold text-green-800 mb-2 relative z-10">🎉 傳送成功！</h3>
                   <p className="text-green-700 font-bold text-base md:text-lg leading-relaxed relative z-10 mb-4">你的成績 <strong>{score.toLocaleString()} 分</strong> 已經成功記錄。</p>
                   
-                  {/* 🌟 修改 2：加入回到大廳的按鈕 */}
                   <button onClick={onBackToPortal} className="relative z-10 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2">
                     <MapIcon className="w-5 h-5" /> 返回遊戲大廳
                   </button>
