@@ -174,8 +174,7 @@ export default function App() {
             >
 
               <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-2 rounded-lg shadow-sm flex items-center justify-center">
-                {/* 🌟 替換成你的專屬 Logo 圖片 */}
-                <img src="/LogoT.ico" alt="網站Logo" className="w-6 h-6 object-contain" />
+                <img src="/LogoT.png" alt="網站Logo" className="w-6 h-6 object-contain" />
               </div>
               <span className="font-black text-xl text-gray-800 tracking-wide">
                 哲民老師的<span className="text-indigo-600">電腦課入口網</span>
