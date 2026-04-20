@@ -634,7 +634,7 @@ export default function MapRescueGame({ onBackToPortal }) {
               <div className="bg-gray-100 rounded-2xl border-4 border-gray-300 overflow-hidden relative h-[350px] md:h-[400px] shadow-inner mt-4 mx-2 md:mx-0">
                 <div className="absolute top-4 left-4 right-4 bg-white rounded-full shadow-lg p-2 flex items-center gap-2 z-20">
                   <input type="text" value="土城國小" readOnly className="flex-1 px-4 font-bold text-gray-700 outline-none bg-transparent" />
-                  <button onClick={() => {setL1Searched(true); addScore(300);}} className={`p-2 md:p-3 rounded-full flex items-center justify-center transition-colors ${!l1Searched ? 'bg-blue-500 hover:bg-blue-600 text-white animate-bounce' : 'bg-gray-300 text-gray-500'}`}>
+                  <button onClick={() => {setL1Searched(true); addScore(500);}} className={`p-2 md:p-3 rounded-full flex items-center justify-center transition-colors ${!l1Searched ? 'bg-blue-500 hover:bg-blue-600 text-white animate-bounce' : 'bg-gray-300 text-gray-500'}`}>
                     <Search className="w-5 h-5 md:w-6 md:h-6" />
                   </button>
                 </div>
