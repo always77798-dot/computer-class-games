@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Sparkles, ShieldAlert, Play, Home, Gamepad2, LayoutGrid, Code
+  Sparkles, ShieldAlert, Play, Home, Gamepad2, LayoutGrid, Code, Maximize, Minimize
 } from 'lucide-react';
 
 // 🌟 引入分離出去的小遊戲模組
@@ -124,6 +124,35 @@ const PortalHome = ({ onSelectGame }) => {
 // ==========================================
 export default function App() {
   const [activeView, setActiveView] = useState('home');
+
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      // 請求全螢幕
+      document.documentElement.requestFullscreen().then(() => {
+        setIsFullscreen(true);
+      }).catch((err) => {
+        console.error(`全螢幕請求失敗: ${err.message}`);
+      });
+    } else {
+      // 退出全螢幕
+      if (document.exitFullscreen) {
+        document.exitFullscreen().then(() => {
+          setIsFullscreen(false);
+        });
+      }
+    }
+  };
+
+  // 監聽鍵盤 Esc 退出全螢幕的事件，確保按鈕狀態同步
+  React.useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#f3f4f6] font-sans selection:bg-indigo-200 selection:text-indigo-900 pb-12 relative z-0">
