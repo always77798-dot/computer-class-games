@@ -21,7 +21,7 @@ const GAMES_LIST = [
     icon: '🐹', // 使用鼠鼠 Emoji
     color: 'bg-amber-100 border-amber-400 text-amber-800',
     tags: ['尚未開放', '敬請期待', '生存割草', 'Google文件'],
-    disabled: true
+    disabled: false
   },
   { 
     id: 'google-magic-academy',
