@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>鼠鼠的文件生存戰 V3.2</title>
+    <title>鼠鼠的文件生存戰 V3.3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
@@ -215,7 +215,7 @@
                     </div>
                 </div>
             </div>
-            <!-- 狀態提示列 (新增) -->
+            <!-- 狀態提示列 -->
             <div id="status-bar" class="mt-2 h-12 w-full max-w-5xl mx-auto shrink-0 flex items-center justify-center text-lg md:text-xl font-black rounded-xl shadow-sm border-2 border-transparent transition-all duration-300 opacity-0 bg-white/90">
                 <span id="status-text"></span>
             </div>
@@ -350,13 +350,13 @@
         const canvas = document.getElementById('game-canvas'); const ctx = canvas.getContext('2d');
         let gameState = 'STOPPED'; let lastTime = 0; let waveIndex = 0; let waveTimeLeft = 0; let damageFlashTimer = 0;
 
-        // 敵人多樣化模板
+        // 優化2：敵人尺寸全面縮小約20%
         const ENEMY_TYPES = {
-            '📄': { size: 20, hpMult: 1.0, spdMult: 1.0, behavior: 'chase' },  // 普通
-            '🔤': { size: 16, hpMult: 0.4, spdMult: 1.6, behavior: 'chase' },  // 刺客
-            '💾': { size: 30, hpMult: 3.5, spdMult: 0.6, behavior: 'chase' },  // 坦克
-            '🖼️': { size: 22, hpMult: 1.2, spdMult: 0.8, behavior: 'shoot', cd: 2000 }, // 射手
-            '❌': { size: 18, hpMult: 0.5, spdMult: 1.2, behavior: 'chase' }   // 魔王召喚物
+            '📄': { size: 16, hpMult: 1.0, spdMult: 1.0, behavior: 'chase' },
+            '🔤': { size: 12, hpMult: 0.4, spdMult: 1.6, behavior: 'chase' },
+            '💾': { size: 24, hpMult: 3.5, spdMult: 0.6, behavior: 'chase' },
+            '🖼️': { size: 18, hpMult: 1.2, spdMult: 0.8, behavior: 'shoot', cd: 2000 },
+            '❌': { size: 14, hpMult: 0.5, spdMult: 1.2, behavior: 'chase' }
         };
 
         const WAVES = [
@@ -404,9 +404,9 @@
         function startCombat(startWeaponType) {
             document.getElementById('weapon-select-overlay').classList.add('hidden');
             deathCount = 0;
-            // 縮小玩家尺寸、降低初始速度，新增場地道具控制 timer
+            // 優化2：角色尺寸縮小至 20
             player = {
-                x: canvas.width / 2, y: canvas.height / 2, size: 25, hp: 100, maxHp: 100,
+                x: canvas.width / 2, y: canvas.height / 2, size: 20, hp: 100, maxHp: 100,
                 speed: 2.5, damageMulti: 1.0, magnetRadius: 100,
                 weapons: [], baseIFrameDuration: 200, invulnerableTimer: 0,
                 speedBuffTimer: 0, slowDebuffTimer: 0, stunTimer: 0, reverseTimer: 0, shieldTimer: 0
@@ -423,7 +423,8 @@
             document.getElementById('wave-title-display').innerText = wave.name.split(':')[0];
             setNPC(`${wave.name} 開始！`, "⚔️", 3000);
             if (wave.onStart) wave.onStart();
-            if (wave.isBoss) { boss = { x: canvas.width/2, y: -100, hp: 20000, maxHp: 20000, size: 100, hitFlash: 0 }; spawnBlueDot(); }
+            // 優化2/3：魔王尺寸縮小至 80
+            if (wave.isBoss) { boss = { x: canvas.width/2, y: -100, hp: 20000, maxHp: 20000, size: 80, hitFlash: 0 }; spawnBlueDot(); }
             window.spawner = setInterval(() => { if(gameState === 'PLAYING') spawnEnemy(wave); }, wave.spawnRate);
         }
 
@@ -446,10 +447,19 @@
             setTimeout(spawnBlueDot, 4000);
         }
 
+        // 優化1：升級已有的武器或新增武器
         function addWeapon(type) {
-            if (!player.weapons.find(w => w.type === type)) {
+            let existing = player.weapons.find(w => w.type === type);
+            if (!existing) {
                 let cd = type === 'palette' ? 1500 : (type === 'cross' ? 2500 : (type==='magic'? 600:0));
-                player.weapons.push({ type, timer: 0, cooldown: cd, multishot: 1, pierce: 0, angle: 0 });
+                player.weapons.push({ type, timer: 0, cooldown: cd, multishot: 1, pierce: 0, angle: 0, level: 1 });
+            } else {
+                existing.level++;
+                if (type === 'magic') {
+                    existing.multishot++; existing.cooldown *= 0.9;
+                } else if (type === 'palette' || type === 'cross') {
+                    existing.cooldown *= 0.8;
+                }
             }
         }
 
@@ -476,20 +486,16 @@
             document.getElementById('screen-revival').classList.add('hidden');
             score = Math.max(0, score - Math.floor(score * 0.1)); deathCount++; player.hp = player.maxHp;
             player.baseIFrameDuration = 200 + (deathCount * 500); player.invulnerableTimer = 2000; damageFlashTimer = 0;
-            // 清場核爆
             enemies = []; projectiles = []; enemyProjectiles = []; screenShake(); updateUI();
             addFloatingText(player.x, player.y - 40, "復活清場！", "#3b82f6");
             
-            // 強制重置鍵盤狀態與鎖定 dt，防止復活暴衝
             for(let k in keys) keys[k] = false; usingKeyboard = false;
             lastTime = performance.now(); gameState = 'PLAYING'; 
-            // 這裡不再重複呼叫 requestAnimationFrame，避免雙重迴圈疊速 Bug
         }
 
         // ================= 遊戲循環 =================
         function gameLoop(timestamp) {
             if (gameState === 'STOPPED') return;
-            // 鎖定 dt 最大值為 50ms 防止暫停後的瞬移暴衝
             let dt = timestamp - lastTime; if (dt > 50) dt = 16; 
             lastTime = timestamp;
 
@@ -498,8 +504,20 @@
         }
 
         function update(dt) {
-            waveTimeLeft -= dt / 1000; document.getElementById('game-timer').innerText = Math.max(0, waveTimeLeft).toFixed(1) + 's';
-            if (waveTimeLeft <= 0) { endWave(); return; }
+            // 優化4：時間倒數與魔王卡死修復
+            if (WAVES[waveIndex].isBoss) {
+                if (waveTimeLeft > 0) {
+                    waveTimeLeft -= dt / 1000;
+                    document.getElementById('game-timer').innerText = Math.max(0, waveTimeLeft).toFixed(1) + 's';
+                } else {
+                    document.getElementById('game-timer').innerText = '0.0s';
+                    waveTimeLeft = 0; // 魔王關時間結束不會判輸，將永遠停留在0等玩家打完
+                }
+            } else {
+                waveTimeLeft -= dt / 1000;
+                document.getElementById('game-timer').innerText = Math.max(0, waveTimeLeft).toFixed(1) + 's';
+                if (waveTimeLeft <= 0) { endWave(); return; }
+            }
 
             // 狀態與計時器更新
             if (damageFlashTimer > 0) damageFlashTimer -= dt;
@@ -510,16 +528,13 @@
             if (player.reverseTimer > 0) player.reverseTimer -= dt;
             if (player.shieldTimer > 0) { player.shieldTimer -= dt; player.invulnerableTimer = Math.max(player.invulnerableTimer, 100); }
 
-            // 實際跑速計算 (受 buff/debuff/stun 影響)
             let currentSpeed = player.speed;
             if (player.speedBuffTimer > 0) currentSpeed *= 1.6;
             if (player.slowDebuffTimer > 0) currentSpeed *= 0.5;
-            if (player.stunTimer > 0) currentSpeed = 0; // 蜘蛛網暈眩
+            if (player.stunTimer > 0) currentSpeed = 0;
 
-            // 控制反轉 (Virus 陷阱)
             let moveMult = player.reverseTimer > 0 ? -1 : 1;
 
-            // 玩家移動 (純鍵盤)
             let kx = 0, ky = 0;
             if(keys.w || keys.ArrowUp) ky -= 1; if(keys.s || keys.ArrowDown) ky += 1;
             if(keys.a || keys.ArrowLeft) kx -= 1; if(keys.d || keys.ArrowRight) kx += 1;
@@ -533,7 +548,6 @@
             player.x = Math.max(player.size/2, Math.min(canvas.width - player.size/2, player.x));
             player.y = Math.max(player.size/2, Math.min(canvas.height - player.size/2, player.y));
 
-            // 場地道具生成 (輔助與陷阱 7:3，豐富種類)
             itemSpawnTimer -= dt;
             if(itemSpawnTimer <= 0) {
                 itemSpawnTimer = 4000 + Math.random()*3000;
@@ -550,7 +564,6 @@
                 }
             }
 
-            // 場地道具互動判定
             for(let i = mapItems.length - 1; i >= 0; i--) {
                 let item = mapItems[i]; item.life -= dt;
                 if(item.life <= 0) { mapItems.splice(i, 1); continue; }
@@ -579,7 +592,7 @@
                 }
             }
 
-            // 武器開火
+            // 優化1：套用武器強化等級
             player.weapons.forEach(w => {
                 w.timer += dt;
                 if (w.type === 'magic' && w.timer >= w.cooldown) {
@@ -593,18 +606,19 @@
                             const baseAngle = Math.atan2(target.y - player.y, target.x - player.x);
                             for(let m = 0; m < w.multishot; m++) {
                                 const spread = (w.multishot > 1) ? (m - (w.multishot-1)/2) * 0.25 : 0;
-                                projectiles.push({ x: player.x, y: player.y, vx: Math.cos(baseAngle + spread)*10, vy: Math.sin(baseAngle + spread)*10, type: 'magic', dmg: 10 * player.damageMulti, size: 15, pierceLimit: w.pierce, hitSet: new Set() });
+                                projectiles.push({ x: player.x, y: player.y, vx: Math.cos(baseAngle + spread)*10, vy: Math.sin(baseAngle + spread)*10, type: 'magic', dmg: 10 * player.damageMulti * w.level, size: 15, pierceLimit: w.pierce, hitSet: new Set() });
                             }
                         }
                     }
                 } else if (w.type === 'palette' && w.timer >= w.cooldown) {
-                    w.timer = 0; projectiles.push({ x: player.x, y: player.y, vx: 0, vy: 0, type: 'palette', dmg: 25 * player.damageMulti, size: 45, life: 1000 });
+                    w.timer = 0; projectiles.push({ x: player.x, y: player.y, vx: 0, vy: 0, type: 'palette', dmg: 25 * player.damageMulti * w.level, size: 45 + (w.level * 5), life: 1000 });
                 } else if (w.type === 'cross' && w.timer >= w.cooldown) {
-                    w.timer = 0; projectiles.push({ x: player.x + (Math.random()-0.5)*300, y: player.y + (Math.random()-0.5)*300, vx: 0, vy: 0, type: 'cross', dmg: 50 * player.damageMulti, size: 80, life: 500 });
-                } else if (w.type === 'highlighter') { w.angle += 0.08; }
+                    w.timer = 0; projectiles.push({ x: player.x + (Math.random()-0.5)*300, y: player.y + (Math.random()-0.5)*300, vx: 0, vy: 0, type: 'cross', dmg: 50 * player.damageMulti * w.level, size: 80 + (w.level * 10), life: 500 });
+                } else if (w.type === 'highlighter') { 
+                    w.angle += 0.08 + (w.level - 1) * 0.02; // 強化後轉更快
+                }
             });
 
-            // 魔王邏輯 (取消追蹤，改發射無追蹤彈幕)
             if (boss) {
                 boss.y += (canvas.height/4 - boss.y) * 0.01; boss.hitFlash -= dt;
                 if (Math.random() < 0.05) {
@@ -613,7 +627,6 @@
                 }
             }
 
-            // 敵方射手與魔王彈幕處理
             for(let i=enemyProjectiles.length-1; i>=0; i--) {
                 let ep = enemyProjectiles[i]; ep.x += ep.vx; ep.y += ep.vy;
                 let size = ep.type === '❌' ? 10 : 5;
@@ -623,7 +636,6 @@
                 if (ep.x < -50 || ep.x > canvas.width+50 || ep.y < -50 || ep.y > canvas.height+50) enemyProjectiles.splice(i, 1);
             }
 
-            // 敵人行為與碰撞
             for (let i = enemies.length - 1; i >= 0; i--) {
                 let e = enemies[i]; e.hitFlash -= dt;
                 const ex = player.x - e.x, ey = player.y - e.y; const ed = Math.hypot(ex, ey);
@@ -645,7 +657,6 @@
                 }
             }
 
-            // 投射物判定
             for (let i = projectiles.length - 1; i >= 0; i--) {
                 let p = projectiles[i]; p.x += p.vx; p.y += p.vy; let destroy = false;
                 if (p.type === 'palette' || p.type === 'cross') {
@@ -670,15 +681,13 @@
                 if(destroy) projectiles.splice(i, 1);
             }
 
-            // 環繞武器判定
             const hw = player.weapons.find(w => w.type === 'highlighter');
             if (hw) {
                 const hx = player.x + Math.cos(hw.angle) * 70; const hy = player.y + Math.sin(hw.angle) * 70;
-                enemies.forEach(e => { if(Math.hypot(e.x - hx, e.y - hy) < 30) damageEnemy(e, 5 * player.damageMulti, hx, hy); });
-                if(boss && Math.hypot(boss.x - hx, boss.y - hy) < 100) damageEnemy(boss, 5 * player.damageMulti);
+                enemies.forEach(e => { if(Math.hypot(e.x - hx, e.y - hy) < 30) damageEnemy(e, 5 * player.damageMulti * hw.level, hx, hy); });
+                if(boss && Math.hypot(boss.x - hx, boss.y - hy) < 100) damageEnemy(boss, 5 * player.damageMulti * hw.level);
             }
 
-            // 寶石吸收
             for (let i = drops.length - 1; i >= 0; i--) {
                 let d = drops[i];
                 if (d.scatterLife > 0) {
@@ -692,7 +701,6 @@
                 }
             }
 
-            // 小藍點真傷
             for (let i = blueDots.length - 1; i >= 0; i--) {
                 let b = blueDots[i]; b.pulse += 0.1;
                 if (Math.hypot(b.x - player.x, b.y - player.y) < 35) {
@@ -701,7 +709,6 @@
                 }
             }
 
-            // 物理特效更新
             for(let i = particles.length - 1; i >= 0; i--) {
                 let p = particles[i]; p.x += p.vx; p.y += p.vy; p.z += p.vz; p.vz -= 0.5;
                 if(p.z <= 0) { p.z = 0; p.vz *= -0.5; } p.life -= 0.02; if(p.life <= 0) particles.splice(i, 1);
@@ -712,7 +719,6 @@
             }
         }
 
-        // 修改的受傷邏輯 (支援護盾防禦扣血)
         function takeDamage(amt) {
             if (player.invulnerableTimer <= 0) { 
                 player.hp -= amt; player.invulnerableTimer = player.baseIFrameDuration; 
@@ -744,13 +750,11 @@
         }
 
         function draw() {
-            // 繪製筆記本背景
             ctx.fillStyle = '#f8fafc'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1;
             for(let i=0; i<canvas.height; i+=40) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke(); }
             ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(60, 0); ctx.lineTo(60, canvas.height); ctx.stroke();
 
-            // 繪製場地道具
             mapItems.forEach(item => {
                 ctx.globalAlpha = Math.min(1, item.life / 1000);
                 ctx.font = `${item.size}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -765,7 +769,6 @@
                 ctx.globalAlpha = 1.0;
             });
 
-            // 繪製寶石
             drops.forEach(d => {
                 ctx.save(); ctx.translate(d.x, d.y); ctx.rotate(Math.PI / 4); ctx.fillStyle = d.color; ctx.fillRect(-4, -4, 8, 8);
                 ctx.strokeStyle = 'white'; ctx.lineWidth = 1; ctx.strokeRect(-4, -4, 8, 8); ctx.restore();
@@ -776,7 +779,6 @@
                 ctx.fillStyle = '#3b82f6'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = 'white'; ctx.stroke();
             });
 
-            // 繪製投射物與敵方彈幕
             projectiles.forEach(p => {
                 if (p.type === 'palette') { ctx.font = `${p.size * (p.life/1000 + 0.5)}px Arial`; ctx.fillText('🎨', p.x, p.y); }
                 else if (p.type === 'cross') { ctx.font = `${p.size}px Arial`; ctx.fillStyle = `rgba(239,68,68,${p.life/500})`; ctx.fillText('➕', p.x, p.y); }
@@ -790,11 +792,9 @@
                 }
             });
 
-            // 環繞武器
             const hw = player.weapons.find(w => w.type === 'highlighter');
             if (hw) { const hx = player.x + Math.cos(hw.angle) * 70; const hy = player.y + Math.sin(hw.angle) * 70; ctx.font = '25px Arial'; ctx.fillText('🖍️', hx, hy); }
 
-            // 繪製敵人
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
             enemies.forEach(e => {
                 ctx.font = `${e.size}px Arial`; ctx.fillText(e.type, e.x, e.y); 
@@ -804,10 +804,10 @@
                 }
             });
 
-            // 繪製魔王
+            // 優化3：將魔王的形象從 🐹 改為蟲蟲 👾
             if (boss) {
                 ctx.save(); ctx.translate(boss.x, boss.y); ctx.scale(1.5, 0.7 + Math.sin(performance.now()/200)*0.1); 
-                ctx.font = `${boss.size}px Arial`; ctx.fillText('🐹', 0, 0);
+                ctx.font = `${boss.size}px Arial`; ctx.fillText('👾', 0, 0);
                 if (boss.hitFlash > 0) {
                     ctx.globalAlpha = Math.min(1, boss.hitFlash / 100); ctx.beginPath(); ctx.arc(0, 0, boss.size/2, 0, Math.PI*2);
                     ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; ctx.fill(); ctx.globalAlpha = 1.0;
@@ -817,12 +817,10 @@
                 ctx.fillStyle = '#ef4444'; ctx.fillRect(boss.x - 80, boss.y - boss.size/2 - 20, 160 * (boss.hp / boss.maxHp), 8);
             }
 
-            // 繪製玩家
             ctx.font = `${player.size}px Arial`;
             if (player.invulnerableTimer > 0 && player.shieldTimer <= 0) ctx.globalAlpha = (Math.floor(performance.now() / 150) % 2 === 0) ? 0.3 : 1.0;
             ctx.fillText('🐹', player.x, player.y); ctx.globalAlpha = 1.0;
             
-            // 繪製玩家狀態特效
             if (player.shieldTimer > 0) {
                 ctx.beginPath(); ctx.arc(player.x, player.y, player.size * 0.8, 0, Math.PI*2);
                 ctx.strokeStyle = '#eab308'; ctx.lineWidth = 3; ctx.stroke(); ctx.fillStyle = 'rgba(234, 179, 8, 0.3)'; ctx.fill();
@@ -833,7 +831,6 @@
             ctx.beginPath(); ctx.arc(player.x, player.y, player.magnetRadius, 0, Math.PI*2);
             ctx.strokeStyle = 'rgba(59, 130, 246, 0.1)'; ctx.lineWidth = 1; ctx.stroke();
 
-            // 粒子與浮動文字
             particles.forEach(p => { ctx.globalAlpha = Math.max(0, p.life); ctx.font = '12px Arial'; ctx.fillText(p.text, p.x, p.y - p.z); ctx.globalAlpha = 1.0; });
             floatingTexts.forEach(t => {
                 ctx.save(); ctx.globalAlpha = Math.max(0, t.life); ctx.translate(t.x, t.y); ctx.scale(t.scale, t.scale);
@@ -841,7 +838,6 @@
                 ctx.strokeText(t.text, 0, 0); ctx.fillText(t.text, 0, 0); ctx.restore();
             });
 
-            // 畫面紅光暈
             if (damageFlashTimer > 0) {
                 ctx.globalAlpha = Math.min(0.2, damageFlashTimer / 500); ctx.fillStyle = '#ef4444'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.globalAlpha = 1.0;
             }
@@ -849,7 +845,8 @@
 
         // ================= 波段與升級 =================
         function endWave() {
-            clearInterval(window.spawner); if (WAVES[waveIndex].isBoss) { triggerRevival(); return; } 
+            clearInterval(window.spawner); 
+            // 優化4移除：不再使用 isBoss 判定強制呼叫 triggerRevival，修正卡死 Bug
             gameState = 'PAUSED'; waveIndex++; showUpgrades();
         }
 
@@ -859,13 +856,18 @@
             setTimeout(() => { switchScreen('quiz'); startQuiz(); }, 2000);
         }
 
+        // 優化1：豐富強化獎勵類型 (共10種)
         const UPGRADES = [
-            { name: "火力全開", desc: "攻擊速度提升", action: () => { player.weapons[0].cooldown *= 0.75; }, icon: "🔥" },
-            { name: "散彈發射", desc: "魔法發射數量 +1", action: () => { player.weapons[0].multishot++; }, icon: "🪄" },
-            { name: "穿透魔法", desc: "子彈可貫穿多怪", action: () => { player.weapons[0].pierce++; }, icon: "🏹" },
-            { name: "環繞螢光筆", desc: "獲得近戰防身武器", action: () => addWeapon('highlighter'), icon: "🖍️" },
+            { name: "火力全開", desc: "主武器攻擊速度提升", action: () => { if(player.weapons[0]) player.weapons[0].cooldown *= 0.75; }, icon: "🔥" },
+            { name: "散彈發射", desc: "主武器發射數量 +1", action: () => { if(player.weapons[0]) player.weapons[0].multishot++; }, icon: "🪄" },
+            { name: "穿透魔法", desc: "子彈可貫穿多怪", action: () => { if(player.weapons[0]) player.weapons[0].pierce++; }, icon: "🏹" },
+            { name: "環繞螢光筆", desc: "獲得近戰防身/強化轉速", action: () => addWeapon('highlighter'), icon: "🖍️" },
+            { name: "調色盤轟炸", desc: "定點大範圍爆破/強化冷卻", action: () => addWeapon('palette'), icon: "🎨" },
+            { name: "天降十字", desc: "獲得大範圍轟炸/強化冷卻", action: () => addWeapon('cross'), icon: "➕" },
             { name: "超級磁鐵", desc: "吸收範圍變廣", action: () => player.magnetRadius *= 1.5, icon: "🧲" },
-            { name: "天降十字", desc: "獲得大範圍轟炸", action: () => addWeapon('cross'), icon: "➕" }
+            { name: "輕盈步伐", desc: "移動速度 +20%", action: () => player.speed *= 1.2, icon: "👟" },
+            { name: "重磅出擊", desc: "所有傷害增強 50%", action: () => player.damageMulti *= 1.5, icon: "💪" },
+            { name: "健康便當", desc: "最大血量 +50", action: () => { player.maxHp += 50; player.hp += 50; updateUI(); }, icon: "🍱" }
         ];
 
         function showUpgrades() {
