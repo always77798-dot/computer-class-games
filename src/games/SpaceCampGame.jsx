@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Rocket, Map, Fingerprint, Search, Zap, Award, ArrowLeft, 
   CheckCircle2, Globe, Monitor, Paintbrush, Flame, Trophy, Crosshair, AlertTriangle,
-  Sparkles, ExternalLink, Star, Wifi, ShieldCheck, Palette, UserCircle2, Plus
+  Sparkles, ExternalLink, Star, Wifi, ShieldCheck, Palette, UserCircle2, Plus, Gauge
 } from 'lucide-react';
 
 // --- 全域 CSS 動畫設定 (注入到 <head>) ---
