@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>鼠鼠的文件生存戰 V3.2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+            touch-action: none;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        @keyframes bounce-slow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        .animate-bounce-slow { animation: bounce-slow 3s infinite; }
+
+        @keyframes shake-hard {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            10%, 30%, 50%, 70%, 90% { transform: translate(-8px, -8px) rotate(-2deg); }
+            20%, 40%, 60%, 80% { transform: translate(8px, 8px) rotate(2deg); }
+        }
+        .shake-hard { animation: shake-hard 0.3s cubic-bezier(.36,.07,.19,.97) both; }
+
+        @keyframes sunburst { 0% { transform: rotate(0deg) scale(2); } 100% { transform: rotate(360deg) scale(2); } }
+        .bg-sunburst {
+            position: absolute; inset: -100%;
+            background: conic-gradient(from 0deg, transparent 0deg 15deg, rgba(253,224,71,0.6) 15deg 30deg, transparent 30deg 45deg, rgba(253,224,71,0.6) 45deg 60deg, transparent 60deg 75deg, rgba(253,224,71,0.6) 75deg 90deg, transparent 90deg 105deg, rgba(253,224,71,0.6) 105deg 120deg, transparent 120deg 135deg, rgba(253,224,71,0.6) 135deg 150deg, transparent 150deg 165deg, rgba(253,224,71,0.6) 165deg 180deg, transparent 180deg 195deg, rgba(253,224,71,0.6) 195deg 210deg, transparent 210deg 225deg, rgba(253,224,71,0.6) 225deg 240deg, transparent 240deg 255deg, rgba(253,224,71,0.6) 255deg 270deg, transparent 270deg 285deg, rgba(253,224,71,0.6) 285deg 300deg, transparent 300deg 315deg, rgba(253,224,71,0.6) 315deg 330deg, transparent 330deg 345deg, rgba(253,224,71,0.6) 345deg 360deg);
+            animation: sunburst 10s linear infinite; z-index: 0; opacity: 0; pointer-events: none; transition: opacity 1s;
+        }
+
+        .fake-doc-btn { transition: transform 0.1s, box-shadow 0.1s; cursor: pointer; }
+        .fake-doc-btn:active { transform: scale(0.95); }
+        .fake-plus-btn {
+            width: 80px; height: 80px; border-radius: 50%; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .fake-plus-btn::before, .fake-plus-btn::after { content: ''; position: absolute; background: #ea4335; }
+        .fake-plus-btn::before { width: 36px; height: 6px; border-radius: 3px; }
+        .fake-plus-btn::after { height: 36px; width: 6px; border-radius: 3px; background: #4285f4; }
+        .fake-plus-btn:hover::before { background: #fbbc05; }
+        .fake-plus-btn:hover::after { background: #34a853; }
+
+        #game-canvas {
+            background: #fdfdfd;
+            border-radius: 1rem;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.05);
+            width: 100%; height: 100%; cursor: crosshair;
+        }
+        .canvas-container { height: 65vh; position: relative; z-index: 10; overflow: hidden; border-radius: 1rem; border: 4px solid #94a3b8; }
+
+        .btn-primary {
+            background: linear-gradient(to bottom, #3b82f6, #2563eb);
+            color: white; font-weight: bold; padding: 0.75rem 2rem;
+            border-radius: 9999px; border: none; cursor: pointer;
+            box-shadow: 0 4px 0 #1e40af, 0 8px 15px rgba(0,0,0,0.1); transition: all 0.1s;
+        }
+        .btn-primary:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 0 0 #1e40af; }
+        .btn-primary:disabled { background: #9ca3af; box-shadow: 0 4px 0 #6b7280; cursor: not-allowed; transform: none; }
+    </style>
+</head>
+<body class="flex flex-col h-screen w-screen overflow-hidden text-gray-800 relative">
+
+    <div class="bg-sunburst" id="sunburst"></div>
+
+    <header class="h-16 md:h-20 bg-white/95 backdrop-blur-md shadow-md flex justify-between items-center px-4 md:px-8 z-40 relative border-b-4 border-blue-200">
+        <div class="flex items-center gap-3">
+            <div class="text-3xl md:text-4xl">🐹</div>
+            <div>
+                <h1 class="text-lg md:text-2xl font-black text-blue-600">鼠鼠的文件生存戰</h1>
+                <p class="text-xs md:text-sm font-bold text-gray-500">鼠鼠村長連線中 👀</p>
+            </div>
+        </div>
+        <div class="text-right">
+            <div class="text-xs md:text-sm font-bold text-gray-500">經驗值 / 分數</div>
+            <div class="text-2xl md:text-3xl font-black text-amber-500 drop-shadow-md leading-none" id="score-display">0</div>
+        </div>
+    </header>
+
+    <div class="absolute top-20 left-1/2 transform -translate-x-1/2 w-11/12 max-w-2xl bg-white border-4 border-amber-400 rounded-2xl p-4 shadow-xl z-50 transition-transform flex gap-4 items-center hidden" id="npc-dialogue">
+        <div class="text-4xl md:text-5xl animate-bounce-slow" id="npc-emoji">🐹</div>
+        <div class="flex-1"><p class="text-sm md:text-lg font-bold text-gray-700" id="npc-text"></p></div>
+    </div>
+
+    <main class="flex-1 relative w-full h-full">
+        <!-- 畫面 0: 課前互動 -->
+        <div id="screen-fakeui" class="screen absolute inset-0 flex flex-col bg-gray-100 z-30">
+            <div id="fakeui-step1" class="flex-1 flex flex-col relative p-4 md:p-8">
+                <div class="bg-white rounded-lg p-4 shadow mb-6 flex items-center gap-4">
+                    <div class="text-blue-500 text-3xl">📄</div>
+                    <div class="font-bold text-xl text-gray-600">Google 文件模擬器</div>
+                </div>
+                <div class="flex-1 flex items-center justify-center">
+                    <div class="text-center">
+                        <p class="font-bold text-2xl mb-8 text-gray-700 bg-white/80 px-6 py-2 rounded-full inline-block shadow border-2 border-blue-200">第一步：點擊「新增文件」開啟魔法陣！</p><br>
+                        <div class="fake-doc-btn fake-plus-btn mx-auto" onclick="fakeUiGoStep2()"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="fakeui-step2" class="flex-1 flex flex-col hidden bg-white relative">
+                <div class="border-b border-gray-300 p-2 flex flex-col gap-2 bg-gray-50">
+                    <div class="flex items-center gap-4">
+                        <div class="text-blue-500 text-3xl ml-2">📄</div>
+                        <div class="flex-1">
+                            <input type="text" id="fake-doc-title" placeholder="請點此輸入標題" class="text-lg text-gray-700 bg-white border-2 border-dashed border-blue-300 hover:border-blue-500 focus:border-blue-600 focus:outline-none px-2 py-1 font-bold transition-colors w-full max-w-xs rounded">
+                            <div class="text-xs text-gray-500 mt-1 flex gap-4 ml-1"><span>檔案</span><span>編輯</span><span>檢視</span><span>插入</span></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 pl-12 border-t border-gray-200 pt-2 opacity-50 pointer-events-none transition-opacity relative" id="fake-format-bar">
+                        <div class="relative">
+                            <button id="fake-btn-color" class="p-1 px-3 border border-transparent hover:border-gray-300 hover:bg-gray-200 rounded font-black text-lg border-b-4 border-b-black transition-colors" onclick="toggleFakePalette()">A</button>
+                            <div id="fake-palette" class="absolute top-full left-0 mt-1 bg-white border border-gray-200 shadow-xl rounded-lg flex gap-2 p-2 z-50 hidden">
+                                <div class="w-6 h-6 rounded-full bg-red-500 cursor-pointer hover:scale-110" onclick="applyFakeColor('text-red-500', 'border-b-red-500')"></div>
+                                <div class="w-6 h-6 rounded-full bg-blue-500 cursor-pointer hover:scale-110" onclick="applyFakeColor('text-blue-500', 'border-b-blue-500')"></div>
+                                <div class="w-6 h-6 rounded-full bg-green-500 cursor-pointer hover:scale-110" onclick="applyFakeColor('text-green-500', 'border-b-green-500')"></div>
+                                <div class="w-6 h-6 rounded-full bg-purple-500 cursor-pointer hover:scale-110" onclick="applyFakeColor('text-purple-500', 'border-b-purple-500')"></div>
+                                <div class="w-6 h-6 rounded-full bg-amber-500 cursor-pointer hover:scale-110" onclick="applyFakeColor('text-amber-500', 'border-b-amber-500')"></div>
+                            </div>
+                        </div>
+                        <button class="p-1 px-3 border border-transparent rounded font-bold text-gray-400">B</button>
+                        <button class="p-1 px-3 border border-transparent rounded font-bold text-gray-400 italic">I</button>
+                    </div>
+                </div>
+                <div class="flex-1 flex justify-center p-4 bg-gray-100">
+                    <div class="bg-white shadow-lg w-full max-w-3xl h-full p-8 md:p-12 relative border border-gray-200 flex flex-col items-center">
+                        <div id="fake-hint-box" class="text-center mb-8 bg-blue-50 p-4 md:p-6 rounded-xl border border-blue-200 w-full transition-all">
+                            <h2 class="text-2xl font-black text-rose-500 mb-2">魔法紙鎖定中 🔒</h2>
+                            <p class="font-bold text-gray-600">請在左上角標題輸入通關密語：<br><span class="text-blue-600 text-xl">「純 5 碼學號」</span><br>(例如：30101)</p>
+                        </div>
+                        <div id="fake-doc-body" class="w-full text-center hidden mt-8">
+                            <p id="fake-text" class="text-3xl font-black text-gray-800 transition-colors inline-block px-4 py-2 rounded select-text cursor-text">鼠鼠最喜歡吃西瓜 🍉</p>
+                        </div>
+                        <div class="absolute bottom-10 left-1/2 transform -translate-x-1/2">
+                            <button id="btn-start-game" class="btn-primary text-2xl px-12 py-4 hidden" onclick="showTutorialOverlay()">進入實戰試煉！</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 畫面 1: 遊戲畫布 -->
+        <div id="screen-game" class="screen absolute inset-0 hidden flex-col p-2 md:p-4 z-20">
+            <div class="flex justify-between items-end mb-2 px-2">
+                <div class="bg-blue-600 text-white font-bold px-4 py-1 rounded-full shadow border-2 border-white transition-colors" id="hp-bar">血量: 100/100</div>
+                <div class="flex flex-col items-end">
+                    <span class="text-sm font-bold text-gray-500" id="wave-title-display">Wave 1</span>
+                    <div class="text-xl font-black text-rose-600 bg-white/80 px-3 py-1 rounded-lg shadow-sm border border-gray-200" id="game-timer">00.0s</div>
+                </div>
+            </div>
+            <div class="canvas-container w-full max-w-5xl mx-auto shadow-2xl relative flex-1" id="canvas-wrapper">
+                <canvas id="game-canvas"></canvas>
+                
+                <!-- 戰前提示 -->
+                <div id="tutorial-overlay" class="absolute inset-0 bg-black/80 z-50 flex items-center justify-center hidden backdrop-blur-sm">
+                    <div class="bg-white rounded-3xl p-6 md:p-8 max-w-md w-11/12 text-center border-4 border-blue-400 shadow-2xl">
+                        <div class="text-6xl mb-4 animate-bounce-slow">⚔️</div>
+                        <h2 class="text-3xl font-black text-blue-600 mb-6">生存割草守則</h2>
+                        <ul class="text-left font-bold text-gray-700 space-y-4 mb-8 text-lg">
+                            <li class="flex items-start gap-2">
+                                <span class="text-blue-500 text-2xl">🏃</span> 
+                                <div><span class="text-blue-500">走位：</span>請使用鍵盤方向鍵 或 <kbd class="bg-gray-200 px-1 border-b-2 border-gray-400 rounded">WASD</kbd>。</div>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="text-rose-500 text-2xl">🔥</span> 
+                                <div><span class="text-rose-500">攻擊：</span>全自動施法，專心閃避！</div>
+                            </li>
+                            <li class="flex items-center gap-2">
+                                <span class="text-amber-500 text-2xl">💎</span> 
+                                <div><span class="text-amber-500">升級：</span>狂撿寶石可以獲得強化技能！</div>
+                            </li>
+                        </ul>
+                        <button class="btn-primary text-2xl w-full py-4 animate-pulse" onclick="showWeaponSelect()">選擇初始武器！</button>
+                    </div>
+                </div>
+
+                <!-- 武器選擇 -->
+                <div id="weapon-select-overlay" class="absolute inset-0 bg-black/80 z-50 flex flex-col items-center justify-center p-4 hidden backdrop-blur-sm">
+                    <h2 class="text-3xl md:text-4xl font-black text-white mb-6 drop-shadow-md">挑選你的初始流派</h2>
+                    <div class="flex flex-col md:flex-row gap-4 w-full max-w-4xl">
+                        <button class="flex-1 bg-white p-6 rounded-3xl shadow-2xl hover:-translate-y-2 hover:ring-4 hover:ring-amber-400 transition-all flex flex-col items-center group" onclick="startCombat('magic')">
+                            <div class="text-6xl mb-2 group-hover:animate-bounce">🪄</div>
+                            <h3 class="text-2xl font-black text-blue-600 mb-1">魔法書</h3>
+                            <p class="font-bold text-gray-500 text-sm text-center">單體追蹤發射<br>(適合遠距離安全輸出)</p>
+                        </button>
+                        <button class="flex-1 bg-white p-6 rounded-3xl shadow-2xl hover:-translate-y-2 hover:ring-4 hover:ring-amber-400 transition-all flex flex-col items-center group" onclick="startCombat('palette')">
+                            <div class="text-6xl mb-2 group-hover:animate-bounce">🎨</div>
+                            <h3 class="text-2xl font-black text-blue-600 mb-1">調色盤</h3>
+                            <p class="font-bold text-gray-500 text-sm text-center">定點大範圍爆破<br>(適合群體牽制割草)</p>
+                        </button>
+                        <button class="flex-1 bg-white p-6 rounded-3xl shadow-2xl hover:-translate-y-2 hover:ring-4 hover:ring-amber-400 transition-all flex flex-col items-center group" onclick="startCombat('highlighter')">
+                            <div class="text-6xl mb-2 group-hover:animate-bounce">🖍️</div>
+                            <h3 class="text-2xl font-black text-blue-600 mb-1">螢光筆</h3>
+                            <p class="font-bold text-gray-500 text-sm text-center">近戰環繞護身<br>(適合貼身風騷走位)</p>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 死亡復活 -->
+                <div id="screen-revival" class="absolute inset-0 hidden bg-black/80 z-50 flex flex-col items-center justify-center p-4 backdrop-blur-md">
+                    <div class="bg-white rounded-3xl p-6 md:p-8 max-w-md w-11/12 text-center border-4 border-rose-500 shadow-2xl">
+                        <div class="text-6xl mb-4 animate-bounce-slow">😵</div>
+                        <h2 class="text-3xl font-black text-rose-600 mb-4">哎呀！被怪獸淹沒了！</h2>
+                        <div class="bg-rose-50 p-4 rounded-xl mb-6 border border-rose-200 text-left">
+                            <p class="font-black text-rose-700 text-lg mb-2 text-center">【 復活代價 】</p>
+                            <p class="font-bold text-gray-700">1. 扣除目前總分的 <span class="text-rose-600 text-xl font-black">10%</span></p>
+                            <p class="font-bold text-gray-700">2. 獲得更長的 <span class="text-blue-600 font-black">受擊無敵時間</span></p>
+                            <p class="font-bold text-blue-600 text-sm mt-2 text-center">✨ 復活時將發動全畫面清場核爆 ✨</p>
+                        </div>
+                        <button class="bg-gradient-to-b from-rose-500 to-rose-700 text-white font-black py-4 px-8 rounded-full shadow-[0_4px_0_#be123c] active:translate-y-[4px] active:shadow-none w-full text-2xl transition-all" onclick="doRevival()">重新站起來！</button>
+                    </div>
+                </div>
+            </div>
+            <!-- 狀態提示列 (新增) -->
+            <div id="status-bar" class="mt-2 h-12 w-full max-w-5xl mx-auto shrink-0 flex items-center justify-center text-lg md:text-xl font-black rounded-xl shadow-sm border-2 border-transparent transition-all duration-300 opacity-0 bg-white/90">
+                <span id="status-text"></span>
+            </div>
+        </div>
+
+        <!-- 畫面 2: Roguelite 升級 -->
+        <div id="screen-upgrade" class="screen absolute inset-0 hidden flex-col items-center justify-center bg-black/70 backdrop-blur-md z-50 p-4">
+            <h2 class="text-4xl md:text-5xl font-black text-white mb-8 drop-shadow-lg text-center" id="upgrade-title">Wave 完勝！選擇強化流派！</h2>
+            <div class="flex flex-col md:flex-row gap-4 w-full max-w-5xl" id="upgrade-cards"></div>
+        </div>
+
+        <!-- 畫面 3: 最終知識問答 -->
+        <div id="screen-quiz" class="screen absolute inset-0 hidden flex-col items-center justify-center p-4 bg-white/90 z-40 backdrop-blur-md">
+            <div class="w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border-4 border-blue-400" id="quiz-box">
+                <div class="bg-blue-500 p-4 text-white text-center">
+                    <h2 class="text-2xl font-black">實戰結束！終極知識大考驗</h2>
+                    <p class="font-bold">題數：<span id="quiz-progress">1/3</span></p>
+                </div>
+                <div class="p-6 md:p-10">
+                    <h3 class="text-xl md:text-2xl font-bold mb-8 text-gray-800 leading-relaxed" id="quiz-question">問題載入中...</h3>
+                    <div class="space-y-4" id="quiz-options"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 畫面 4: 完美通關 -->
+        <div id="screen-clear" class="screen absolute inset-0 hidden flex-col items-center justify-center p-4 bg-transparent z-40">
+            <h2 class="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-rose-500 mb-2 drop-shadow-sm filter drop-shadow-[0_0_10px_rgba(255,255,255,1)]">PERFECT CLEAR!</h2>
+            <p class="text-2xl font-bold text-white bg-black/50 px-6 py-2 rounded-full mb-8">你已經是頂尖的雲端魔法師了！</p>
+            <div class="bg-white/95 p-8 rounded-3xl shadow-2xl w-full max-w-md text-center border-4 border-blue-300 relative overflow-hidden">
+                <div class="text-6xl mb-4">🏆</div>
+                <p class="font-bold text-gray-500 mb-1">你的最終爆發分數</p>
+                <div class="text-6xl font-black text-blue-600 mb-6 drop-shadow" id="final-score-display">0</div>
+                <div class="text-left mb-6">
+                    <label class="font-bold text-gray-700 block mb-2">🔑 系統已記錄你的學號：</label>
+                    <input type="text" id="final-student-id" maxlength="5" class="w-full text-3xl p-4 bg-gray-100 border-2 border-gray-300 rounded-xl font-black text-center text-blue-600 focus:outline-none focus:border-amber-400 transition-colors">
+                    <p id="id-error" class="text-rose-500 font-bold text-sm mt-2 opacity-0 transition-opacity">❌ 學號格式錯誤 (必須為5碼數字)</p>
+                </div>
+                <button id="btn-submit" class="btn-primary w-full text-2xl py-4" onclick="submitData()">發送成績給村長！</button>
+            </div>
+        </div>
+
+        <!-- 畫面 5: 送出完成 -->
+        <div id="screen-done" class="screen absolute inset-0 hidden flex-col items-center justify-center p-4 bg-white/95 z-50 backdrop-blur-md">
+            <div class="text-8xl mb-4">🎉</div>
+            <h2 class="text-5xl font-black text-green-500 mb-4 drop-shadow-sm">成績已成功送出！</h2>
+            <p class="text-2xl font-bold text-gray-600">鼠鼠村長為你感到驕傲！可以關閉網頁了！</p>
+        </div>
+    </main>
+
+    <script>
+        // ================= 核心系統 =================
+        let score = 0; let globalStudentId = ""; let deathCount = 0;
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`screen-${screenId}`).classList.remove('hidden');
+        }
+        function setNPC(text, expression = '🐹', duration = 4000) {
+            const dialogue = document.getElementById('npc-dialogue');
+            document.getElementById('npc-text').innerText = text; document.getElementById('npc-emoji').innerText = expression;
+            dialogue.classList.remove('hidden'); dialogue.classList.remove('scale-100'); dialogue.classList.add('scale-105');
+            setTimeout(() => { dialogue.classList.remove('scale-105'); dialogue.classList.add('scale-100'); }, 200);
+            if(window.npcTimer) clearTimeout(window.npcTimer);
+            if(duration > 0) window.npcTimer = setTimeout(() => dialogue.classList.add('hidden'), duration);
+        }
+
+        // ================= 課前引導 (Fake UI) =================
+        let fakeUiStep = 0; let isTextHighlighted = false;
+        function fakeUiGoStep2() {
+            document.getElementById('fakeui-step1').classList.add('hidden'); document.getElementById('fakeui-step2').classList.remove('hidden');
+        }
+        const fakeTitleInput = document.getElementById('fake-doc-title');
+        fakeTitleInput.addEventListener('input', (e) => {
+            if (fakeUiStep >= 1) return;
+            const val = e.target.value.trim();
+            if (val.match(/^(\d{5})$/)) {
+                globalStudentId = val; fakeUiStep = 1;
+                fakeTitleInput.classList.replace('border-blue-300', 'border-green-500');
+                document.getElementById('fake-format-bar').classList.remove('opacity-50', 'pointer-events-none');
+                document.getElementById('fake-hint-box').innerHTML = `
+                    <h2 class="text-2xl font-black text-blue-600 mb-2">第二步：先選取，再換衣服 👕</h2>
+                    <p class="font-bold text-gray-600">請用滑鼠<span class="text-rose-500 font-black text-xl">「按住拖曳」下方文字把它反白</span>，然後點擊上方的 <span class="bg-gray-200 px-2 py-1 rounded font-black border-b-4 border-b-black">A</span> 按鈕！</p>`;
+                document.getElementById('fake-doc-body').classList.remove('hidden');
+            }
+        });
+        document.addEventListener('selectionchange', () => {
+            if (fakeUiStep !== 1) return;
+            const selection = window.getSelection(); const text = selection.toString().trim(); const node = selection.anchorNode;
+            let isInsideFakeText = false;
+            if (node && (node.id === 'fake-text' || (node.parentElement && node.parentElement.id === 'fake-text'))) isInsideFakeText = true;
+            if (isInsideFakeText && text.length >= 2) {
+                isTextHighlighted = true;
+                document.getElementById('fake-hint-box').innerHTML = `
+                    <h2 class="text-2xl font-black text-blue-600 mb-2">很好！文字被反白選取了 👍</h2>
+                    <p class="font-bold text-gray-600">請保持選取，並點擊上方的 <span class="bg-gray-200 px-2 py-1 rounded font-black border-b-4 border-b-black">A</span> 按鈕！</p>`;
+            } else { isTextHighlighted = false; }
+        });
+        function toggleFakePalette() {
+            if(fakeUiStep < 1) return;
+            if(!isTextHighlighted) {
+                document.getElementById('fake-hint-box').innerHTML = `
+                    <h2 class="text-2xl font-black text-rose-500 mb-2">哎呀！忘記一個重要步驟 ⚠️</h2>
+                    <p class="font-bold text-gray-600">要先用滑鼠<span class="text-blue-500 font-black">「按住拖曳」把文字反白</span>喔！電腦才知道你要幫誰換顏色！</p>`;
+                const textEl = document.getElementById('fake-text'); textEl.classList.add('shake-hard');
+                setTimeout(() => textEl.classList.remove('shake-hard'), 300); return;
+            }
+            document.getElementById('fake-palette').classList.toggle('hidden');
+        }
+        function applyFakeColor(colorClass, borderClass) {
+            const textEl = document.getElementById('fake-text');
+            textEl.className = `text-3xl font-black transition-colors inline-block px-4 py-2 rounded select-text cursor-text ${colorClass}`;
+            const btnA = document.getElementById('fake-btn-color');
+            btnA.className = btnA.className.replace(/border-b-\w+-500|border-b-black/g, ''); btnA.classList.add(borderClass);
+            document.getElementById('fake-palette').classList.add('hidden');
+            window.getSelection().removeAllRanges(); 
+            isTextHighlighted = false; fakeUiStep = 2;
+            document.getElementById('fake-hint-box').innerHTML = `
+                <h2 class="text-2xl font-black text-green-600 mb-2">準備就緒！ ✅</h2>
+                <p class="font-bold text-gray-600">魔法紙充滿能量，點擊下方按鈕出發！</p>`;
+            const startBtn = document.getElementById('btn-start-game'); startBtn.classList.remove('hidden'); startBtn.classList.add('animate-pulse');
+        }
+
+        // ================= 遊戲核心 (Canvas) =================
+        function showTutorialOverlay() {
+            switchScreen('game'); document.getElementById('tutorial-overlay').classList.remove('hidden'); resizeCanvas();
+        }
+        function showWeaponSelect() {
+            document.getElementById('tutorial-overlay').classList.add('hidden');
+            document.getElementById('weapon-select-overlay').classList.remove('hidden');
+        }
+
+        const canvas = document.getElementById('game-canvas'); const ctx = canvas.getContext('2d');
+        let gameState = 'STOPPED'; let lastTime = 0; let waveIndex = 0; let waveTimeLeft = 0; let damageFlashTimer = 0;
+
+        // 敵人多樣化模板
+        const ENEMY_TYPES = {
+            '📄': { size: 20, hpMult: 1.0, spdMult: 1.0, behavior: 'chase' },  // 普通
+            '🔤': { size: 16, hpMult: 0.4, spdMult: 1.6, behavior: 'chase' },  // 刺客
+            '💾': { size: 30, hpMult: 3.5, spdMult: 0.6, behavior: 'chase' },  // 坦克
+            '🖼️': { size: 22, hpMult: 1.2, spdMult: 0.8, behavior: 'shoot', cd: 2000 }, // 射手
+            '❌': { size: 18, hpMult: 0.5, spdMult: 1.2, behavior: 'chase' }   // 魔王召喚物
+        };
+
+        const WAVES = [
+            { duration: 30, name: "Wave 1: 基礎暖身", enemies: ['📄'], hp: 10, speed: 0.8, spawnRate: 1000 },
+            { duration: 40, name: "Wave 2: 文字變裝", enemies: ['📄', '🔤'], hp: 15, speed: 1.0, spawnRate: 800 },
+            { duration: 50, name: "Wave 3: 圖片湧現", enemies: ['📄', '🔤', '🖼️'], hp: 20, speed: 1.1, spawnRate: 500 },
+            { duration: 60, name: "Wave 4: 彈幕地獄", enemies: ['📄', '🔤', '🖼️', '💾'], hp: 28, speed: 1.3, spawnRate: 300 },
+            { duration: 60, name: "Wave 5: 極限魔王", enemies: ['❌'], hp: 20, speed: 1.5, spawnRate: 400, isBoss: true }
+        ];
+
+        let player = {}; let enemies = []; let projectiles = []; let enemyProjectiles = [];
+        let drops = []; let particles = []; let floatingTexts = []; let mapItems = [];
+        let boss = null; let blueDots = []; let itemSpawnTimer = 3000;
+
+        const pointer = { x: 0, y: 0 };
+        const keys = { w: false, a: false, s: false, d: false, ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false };
+        let usingKeyboard = false;
+
+        window.addEventListener('keydown', e => { if(keys.hasOwnProperty(e.key)) { keys[e.key] = true; usingKeyboard = true; }});
+        window.addEventListener('keyup', e => { if(keys.hasOwnProperty(e.key)) keys[e.key] = false; });
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth; canvas.height = canvas.parentElement.clientHeight;
+            if (player && !player.x) { player.x = canvas.width/2; player.y = canvas.height/2; pointer.x = player.x; pointer.y = player.y; }
+        }
+        window.addEventListener('resize', resizeCanvas);
+        
+        // 移除滑鼠與觸控移動功能
+        canvas.addEventListener('touchmove', e => e.preventDefault(), {passive: false});
+
+        // 狀態列顯示函數
+        let statusTimeout;
+        function showStatusMsg(msg, colorClass) {
+            const bar = document.getElementById('status-bar');
+            const text = document.getElementById('status-text');
+            text.innerText = msg;
+            text.className = colorClass;
+            bar.className = `mt-2 h-12 w-full max-w-5xl mx-auto shrink-0 flex items-center justify-center text-lg md:text-xl font-black rounded-xl shadow-sm border-2 transition-all duration-300 opacity-100 bg-white/90 border-${colorClass.split('-')[1]}-300`;
+            
+            if (statusTimeout) clearTimeout(statusTimeout);
+            statusTimeout = setTimeout(() => {
+                bar.classList.replace('opacity-100', 'opacity-0');
+            }, 3000); // 顯示 3 秒
+        }
+
+        function startCombat(startWeaponType) {
+            document.getElementById('weapon-select-overlay').classList.add('hidden');
+            deathCount = 0;
+            // 縮小玩家尺寸、降低初始速度，新增場地道具控制 timer
+            player = {
+                x: canvas.width / 2, y: canvas.height / 2, size: 25, hp: 100, maxHp: 100,
+                speed: 2.5, damageMulti: 1.0, magnetRadius: 100,
+                weapons: [], baseIFrameDuration: 200, invulnerableTimer: 0,
+                speedBuffTimer: 0, slowDebuffTimer: 0, stunTimer: 0, reverseTimer: 0, shieldTimer: 0
+            };
+            addWeapon(startWeaponType); 
+            pointer.x = player.x; pointer.y = player.y; damageFlashTimer = 0;
+            score = 0; waveIndex = 0; mapItems = []; itemSpawnTimer = 3000;
+            updateUI(); startWave(); lastTime = performance.now(); gameState = 'PLAYING'; requestAnimationFrame(gameLoop);
+        }
+
+        function startWave() {
+            const wave = WAVES[waveIndex]; waveTimeLeft = wave.duration;
+            enemies = []; projectiles = []; enemyProjectiles = []; drops = []; blueDots = []; mapItems = []; boss = null;
+            document.getElementById('wave-title-display').innerText = wave.name.split(':')[0];
+            setNPC(`${wave.name} 開始！`, "⚔️", 3000);
+            if (wave.onStart) wave.onStart();
+            if (wave.isBoss) { boss = { x: canvas.width/2, y: -100, hp: 20000, maxHp: 20000, size: 100, hitFlash: 0 }; spawnBlueDot(); }
+            window.spawner = setInterval(() => { if(gameState === 'PLAYING') spawnEnemy(wave); }, wave.spawnRate);
+        }
+
+        function spawnEnemy(wave) {
+            let x, y;
+            if (Math.random() > 0.5) { x = Math.random() * canvas.width; y = Math.random() > 0.5 ? -30 : canvas.height + 30; } 
+            else { x = Math.random() > 0.5 ? -30 : canvas.width + 30; y = Math.random() * canvas.height; }
+            const typeKey = wave.enemies[Math.floor(Math.random() * wave.enemies.length)];
+            const t = ENEMY_TYPES[typeKey];
+            enemies.push({ 
+                x, y, type: typeKey, size: t.size, hp: wave.hp * t.hpMult, 
+                speed: wave.speed * t.spdMult * (0.9 + Math.random()*0.2), 
+                behavior: t.behavior, timer: t.cd || 0, hitFlash: 0 
+            });
+        }
+
+        function spawnBlueDot() {
+            if(blueDots.length >= 3 || gameState !== 'PLAYING') return;
+            blueDots.push({ x: Math.random()*(canvas.width-100)+50, y: Math.random()*(canvas.height-100)+50, size: 30, pulse: 0 });
+            setTimeout(spawnBlueDot, 4000);
+        }
+
+        function addWeapon(type) {
+            if (!player.weapons.find(w => w.type === type)) {
+                let cd = type === 'palette' ? 1500 : (type === 'cross' ? 2500 : (type==='magic'? 600:0));
+                player.weapons.push({ type, timer: 0, cooldown: cd, multishot: 1, pierce: 0, angle: 0 });
+            }
+        }
+
+        function screenShake() {
+            const wrapper = document.getElementById('canvas-wrapper'); wrapper.classList.remove('shake-hard'); void wrapper.offsetWidth; wrapper.classList.add('shake-hard');
+        }
+        function spawnParticles(x, y, count, text) {
+            for(let i=0; i<count; i++) {
+                particles.push({ x, y, z: Math.random()*20 + 10, vx: (Math.random()-0.5)*15, vy: (Math.random()-0.5)*15, vz: Math.random()*8+5, text: text || ['📄','✨','💥'][Math.floor(Math.random()*3)], life: 1.0 });
+            }
+        }
+        function addFloatingText(x, y, text, color) {
+            floatingTexts.push({ x, y, text, color, life: 1.0, vy: -3 - Math.random(), vx: (Math.random()-0.5)*2, scale: 1.5 });
+        }
+        function updateUI() {
+            document.getElementById('score-display').innerText = Math.floor(score).toLocaleString();
+            const hpBar = document.getElementById('hp-bar'); hpBar.innerText = `血量: ${Math.floor(player.hp)}/${player.maxHp}`;
+            if (player.hp < player.maxHp * 0.3) hpBar.classList.replace('bg-blue-600', 'bg-rose-600'); else hpBar.classList.replace('bg-rose-600', 'bg-blue-600');
+        }
+
+        // ================= 死亡與復活 (清場核爆) =================
+        function triggerRevival() { gameState = 'REVIVAL'; document.getElementById('screen-revival').classList.remove('hidden'); }
+        function doRevival() {
+            document.getElementById('screen-revival').classList.add('hidden');
+            score = Math.max(0, score - Math.floor(score * 0.1)); deathCount++; player.hp = player.maxHp;
+            player.baseIFrameDuration = 200 + (deathCount * 500); player.invulnerableTimer = 2000; damageFlashTimer = 0;
+            // 清場核爆
+            enemies = []; projectiles = []; enemyProjectiles = []; screenShake(); updateUI();
+            addFloatingText(player.x, player.y - 40, "復活清場！", "#3b82f6");
+            
+            // 強制重置鍵盤狀態與鎖定 dt，防止復活暴衝
+            for(let k in keys) keys[k] = false; usingKeyboard = false;
+            lastTime = performance.now(); gameState = 'PLAYING'; 
+            // 這裡不再重複呼叫 requestAnimationFrame，避免雙重迴圈疊速 Bug
+        }
+
+        // ================= 遊戲循環 =================
+        function gameLoop(timestamp) {
+            if (gameState === 'STOPPED') return;
+            // 鎖定 dt 最大值為 50ms 防止暫停後的瞬移暴衝
+            let dt = timestamp - lastTime; if (dt > 50) dt = 16; 
+            lastTime = timestamp;
+
+            if (gameState === 'PLAYING') update(dt);
+            draw(); requestAnimationFrame(gameLoop);
+        }
+
+        function update(dt) {
+            waveTimeLeft -= dt / 1000; document.getElementById('game-timer').innerText = Math.max(0, waveTimeLeft).toFixed(1) + 's';
+            if (waveTimeLeft <= 0) { endWave(); return; }
+
+            // 狀態與計時器更新
+            if (damageFlashTimer > 0) damageFlashTimer -= dt;
+            if (player.invulnerableTimer > 0) player.invulnerableTimer -= dt;
+            if (player.speedBuffTimer > 0) player.speedBuffTimer -= dt;
+            if (player.slowDebuffTimer > 0) player.slowDebuffTimer -= dt;
+            if (player.stunTimer > 0) player.stunTimer -= dt;
+            if (player.reverseTimer > 0) player.reverseTimer -= dt;
+            if (player.shieldTimer > 0) { player.shieldTimer -= dt; player.invulnerableTimer = Math.max(player.invulnerableTimer, 100); }
+
+            // 實際跑速計算 (受 buff/debuff/stun 影響)
+            let currentSpeed = player.speed;
+            if (player.speedBuffTimer > 0) currentSpeed *= 1.6;
+            if (player.slowDebuffTimer > 0) currentSpeed *= 0.5;
+            if (player.stunTimer > 0) currentSpeed = 0; // 蜘蛛網暈眩
+
+            // 控制反轉 (Virus 陷阱)
+            let moveMult = player.reverseTimer > 0 ? -1 : 1;
+
+            // 玩家移動 (純鍵盤)
+            let kx = 0, ky = 0;
+            if(keys.w || keys.ArrowUp) ky -= 1; if(keys.s || keys.ArrowDown) ky += 1;
+            if(keys.a || keys.ArrowLeft) kx -= 1; if(keys.d || keys.ArrowRight) kx += 1;
+
+            if (kx !== 0 || ky !== 0) {
+                const len = Math.hypot(kx, ky); 
+                player.x += (kx/len) * currentSpeed * moveMult; 
+                player.y += (ky/len) * currentSpeed * moveMult; 
+            }
+            
+            player.x = Math.max(player.size/2, Math.min(canvas.width - player.size/2, player.x));
+            player.y = Math.max(player.size/2, Math.min(canvas.height - player.size/2, player.y));
+
+            // 場地道具生成 (輔助與陷阱 7:3，豐富種類)
+            itemSpawnTimer -= dt;
+            if(itemSpawnTimer <= 0) {
+                itemSpawnTimer = 4000 + Math.random()*3000;
+                let buffs = mapItems.filter(i => i.type === 'buff'); let traps = mapItems.filter(i => i.type === 'trap');
+                let rand = Math.random();
+                if(rand < 0.7 && buffs.length < 2) {
+                    const buffTypes = ['heal', 'speed', 'shield', 'magnet', 'bomb'];
+                    let subtype = buffTypes[Math.floor(Math.random() * buffTypes.length)];
+                    mapItems.push({ x: Math.random()*(canvas.width-100)+50, y: Math.random()*(canvas.height-100)+50, type: 'buff', subtype: subtype, size: 25, life: 15000 });
+                } else if (rand >= 0.7 && traps.length < 1) {
+                    const trapTypes = ['web', 'virus', 'lag', 'fire'];
+                    let subtype = trapTypes[Math.floor(Math.random() * trapTypes.length)];
+                    mapItems.push({ x: Math.random()*(canvas.width-100)+50, y: Math.random()*(canvas.height-100)+50, type: 'trap', subtype: subtype, size: 30, life: 12000 });
+                }
+            }
+
+            // 場地道具互動判定
+            for(let i = mapItems.length - 1; i >= 0; i--) {
+                let item = mapItems[i]; item.life -= dt;
+                if(item.life <= 0) { mapItems.splice(i, 1); continue; }
+                let dist = Math.hypot(player.x - item.x, player.y - item.y);
+                if (dist < player.size/2 + item.size/2) {
+                    if(item.type === 'buff') {
+                        if(item.subtype === 'heal') { player.hp = Math.min(player.maxHp, player.hp + 30); addFloatingText(player.x, player.y, "+HP", "#22c55e"); showStatusMsg("獲得道具：🍎 恢復生命值！", "text-green-600"); updateUI(); }
+                        else if (item.subtype === 'speed') { player.speedBuffTimer = 4000; addFloatingText(player.x, player.y, "加速!", "#3b82f6"); showStatusMsg("獲得道具：⚡ 跑速大幅提升！", "text-blue-600"); }
+                        else if (item.subtype === 'shield') { player.shieldTimer = 5000; player.invulnerableTimer = 5000; addFloatingText(player.x, player.y, "無敵護盾!", "#eab308"); showStatusMsg("獲得道具：🛡️ 獲得 5 秒絕對無敵！", "text-yellow-600"); }
+                        else if (item.subtype === 'magnet') { 
+                            drops.forEach(d => { d.scatterLife = 0; }); 
+                            let oldRad = player.magnetRadius; player.magnetRadius = 3000; setTimeout(()=>player.magnetRadius = oldRad, 500);
+                            addFloatingText(player.x, player.y, "超級吸力!", "#a855f7"); showStatusMsg("獲得道具：🧲 吸收全場經驗寶石！", "text-purple-600");
+                        }
+                        else if (item.subtype === 'bomb') {
+                            screenShake(); enemies.forEach(e => { damageEnemy(e, 500, player.x, player.y); }); if(boss) damageEnemy(boss, 500);
+                            addFloatingText(player.x, player.y, "全頻炸彈!", "#ef4444"); showStatusMsg("獲得道具：💣 全場炸彈轟炸！", "text-red-600");
+                        }
+                        mapItems.splice(i, 1);
+                    } else if (item.type === 'trap') {
+                        if(item.subtype === 'web') { player.stunTimer = 2000; addFloatingText(player.x, player.y, "被網住了!", "#d1d5db"); showStatusMsg("踩到陷阱：🕸️ 蜘蛛網定身 2 秒！", "text-gray-600"); mapItems.splice(i, 1); }
+                        else if(item.subtype === 'virus') { player.reverseTimer = 3000; addFloatingText(player.x, player.y, "方向錯亂!", "#84cc16"); showStatusMsg("踩到陷阱：🦠 方向鍵錯亂 3 秒！", "text-lime-600"); mapItems.splice(i, 1); }
+                        else if(item.subtype === 'lag') { player.slowDebuffTimer = 4000; addFloatingText(player.x, player.y, "Lag減速!", "#94a3b8"); showStatusMsg("踩到陷阱：⏳ Lag 減速 4 秒！", "text-slate-600"); mapItems.splice(i, 1); }
+                        else if(item.subtype === 'fire') { takeDamage(15); addFloatingText(player.x, player.y, "燒傷!", "#ef4444"); showStatusMsg("踩到陷阱：🔥 遭到火焰燒傷！", "text-red-600"); mapItems.splice(i, 1); }
+                    }
+                }
+            }
+
+            // 武器開火
+            player.weapons.forEach(w => {
+                w.timer += dt;
+                if (w.type === 'magic' && w.timer >= w.cooldown) {
+                    w.timer = 0;
+                    if (enemies.length > 0 || boss) {
+                        let target = boss || enemies.reduce((closest, e) => {
+                            const d = Math.hypot(e.x - player.x, e.y - player.y); return d < closest.d ? {e, d} : closest;
+                        }, {e: null, d: Infinity}).e;
+                        
+                        if (target) {
+                            const baseAngle = Math.atan2(target.y - player.y, target.x - player.x);
+                            for(let m = 0; m < w.multishot; m++) {
+                                const spread = (w.multishot > 1) ? (m - (w.multishot-1)/2) * 0.25 : 0;
+                                projectiles.push({ x: player.x, y: player.y, vx: Math.cos(baseAngle + spread)*10, vy: Math.sin(baseAngle + spread)*10, type: 'magic', dmg: 10 * player.damageMulti, size: 15, pierceLimit: w.pierce, hitSet: new Set() });
+                            }
+                        }
+                    }
+                } else if (w.type === 'palette' && w.timer >= w.cooldown) {
+                    w.timer = 0; projectiles.push({ x: player.x, y: player.y, vx: 0, vy: 0, type: 'palette', dmg: 25 * player.damageMulti, size: 45, life: 1000 });
+                } else if (w.type === 'cross' && w.timer >= w.cooldown) {
+                    w.timer = 0; projectiles.push({ x: player.x + (Math.random()-0.5)*300, y: player.y + (Math.random()-0.5)*300, vx: 0, vy: 0, type: 'cross', dmg: 50 * player.damageMulti, size: 80, life: 500 });
+                } else if (w.type === 'highlighter') { w.angle += 0.08; }
+            });
+
+            // 魔王邏輯 (取消追蹤，改發射無追蹤彈幕)
+            if (boss) {
+                boss.y += (canvas.height/4 - boss.y) * 0.01; boss.hitFlash -= dt;
+                if (Math.random() < 0.05) {
+                    const angle = Math.atan2(player.y - boss.y, player.x - boss.x) + (Math.random()-0.5)*0.5;
+                    enemyProjectiles.push({ x: boss.x, y: boss.y, vx: Math.cos(angle)*6, vy: Math.sin(angle)*6, type: '❌' });
+                }
+            }
+
+            // 敵方射手與魔王彈幕處理
+            for(let i=enemyProjectiles.length-1; i>=0; i--) {
+                let ep = enemyProjectiles[i]; ep.x += ep.vx; ep.y += ep.vy;
+                let size = ep.type === '❌' ? 10 : 5;
+                if (Math.hypot(ep.x - player.x, ep.y - player.y) < player.size/2 + size) {
+                    takeDamage(8); enemyProjectiles.splice(i, 1); continue;
+                }
+                if (ep.x < -50 || ep.x > canvas.width+50 || ep.y < -50 || ep.y > canvas.height+50) enemyProjectiles.splice(i, 1);
+            }
+
+            // 敵人行為與碰撞
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                let e = enemies[i]; e.hitFlash -= dt;
+                const ex = player.x - e.x, ey = player.y - e.y; const ed = Math.hypot(ex, ey);
+                
+                if (e.behavior === 'chase') {
+                    if (ed > 0) { e.x += (ex / ed) * e.speed; e.y += (ey / ed) * e.speed; }
+                } else if (e.behavior === 'shoot') {
+                    if (ed > 200) { e.x += (ex / ed) * e.speed; e.y += (ey / ed) * e.speed; } 
+                    else if (ed < 120) { e.x -= (ex / ed) * e.speed * 0.5; e.y -= (ey / ed) * e.speed * 0.5; }
+                    e.timer -= dt;
+                    if (e.timer <= 0) {
+                        e.timer = ENEMY_TYPES['🖼️'].cd;
+                        enemyProjectiles.push({ x: e.x, y: e.y, vx: (ex/ed)*3, vy: (ey/ed)*3 });
+                    }
+                }
+
+                if (Math.hypot(e.x - player.x, e.y - player.y) < (e.size + player.size) * 0.4) {
+                    takeDamage(boss ? 15 : 5);
+                }
+            }
+
+            // 投射物判定
+            for (let i = projectiles.length - 1; i >= 0; i--) {
+                let p = projectiles[i]; p.x += p.vx; p.y += p.vy; let destroy = false;
+                if (p.type === 'palette' || p.type === 'cross') {
+                    p.life -= dt;
+                    if (p.life <= 0) {
+                        spawnParticles(p.x, p.y, p.type==='cross'?20:10, p.type==='cross'?'➕':'🎨');
+                        enemies.forEach(e => { if(Math.hypot(e.x - p.x, e.y - p.y) < p.size * 2) damageEnemy(e, p.dmg, p.x, p.y); });
+                        if(boss && Math.hypot(boss.x - p.x, boss.y - p.y) < p.size * 3) damageEnemy(boss, p.dmg);
+                        destroy = true;
+                    }
+                } else {
+                    enemies.forEach(e => {
+                        if (!destroy && Math.hypot(e.x - p.x, e.y - p.y) < (e.size + p.size)*0.5 && !p.hitSet.has(e)) { 
+                            p.hitSet.add(e); damageEnemy(e, p.dmg, p.x, p.y); if(p.hitSet.size > p.pierceLimit) destroy = true; 
+                        }
+                    });
+                    if (!destroy && boss && Math.hypot(boss.x - p.x, boss.y - p.y) < boss.size*0.6 && !p.hitSet.has(boss)) { 
+                        p.hitSet.add(boss); damageEnemy(boss, p.dmg); if(p.hitSet.size > p.pierceLimit) destroy = true; 
+                    }
+                    if (p.x < -50 || p.x > canvas.width+50 || p.y < -50 || p.y > canvas.height+50) destroy = true;
+                }
+                if(destroy) projectiles.splice(i, 1);
+            }
+
+            // 環繞武器判定
+            const hw = player.weapons.find(w => w.type === 'highlighter');
+            if (hw) {
+                const hx = player.x + Math.cos(hw.angle) * 70; const hy = player.y + Math.sin(hw.angle) * 70;
+                enemies.forEach(e => { if(Math.hypot(e.x - hx, e.y - hy) < 30) damageEnemy(e, 5 * player.damageMulti, hx, hy); });
+                if(boss && Math.hypot(boss.x - hx, boss.y - hy) < 100) damageEnemy(boss, 5 * player.damageMulti);
+            }
+
+            // 寶石吸收
+            for (let i = drops.length - 1; i >= 0; i--) {
+                let d = drops[i];
+                if (d.scatterLife > 0) {
+                    d.x += d.vx; d.y += d.vy; d.vx *= 0.9; d.vy *= 0.9; d.scatterLife -= dt;
+                } else {
+                    const dist = Math.hypot(d.x - player.x, d.y - player.y);
+                    if (dist < player.magnetRadius) {
+                        d.speed += 0.8; d.x += ((player.x - d.x) / dist) * d.speed; d.y += ((player.y - d.y) / dist) * d.speed;
+                    }
+                    if (dist < 20) { score += 30; updateUI(); drops.splice(i, 1); }
+                }
+            }
+
+            // 小藍點真傷
+            for (let i = blueDots.length - 1; i >= 0; i--) {
+                let b = blueDots[i]; b.pulse += 0.1;
+                if (Math.hypot(b.x - player.x, b.y - player.y) < 35) {
+                    screenShake(); addFloatingText(boss.x, boss.y, "真傷破擊!", "#3b82f6"); damageEnemy(boss, boss.maxHp * 0.2);
+                    blueDots.splice(i, 1); score += 5000; updateUI();
+                }
+            }
+
+            // 物理特效更新
+            for(let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i]; p.x += p.vx; p.y += p.vy; p.z += p.vz; p.vz -= 0.5;
+                if(p.z <= 0) { p.z = 0; p.vz *= -0.5; } p.life -= 0.02; if(p.life <= 0) particles.splice(i, 1);
+            }
+            for(let i = floatingTexts.length - 1; i >= 0; i--) {
+                let t = floatingTexts[i]; t.x += t.vx; t.y += t.vy; t.vy += 0.1; t.scale = Math.max(1.0, t.scale - 0.05);
+                t.life -= 0.02; if(t.life <= 0) floatingTexts.splice(i, 1);
+            }
+        }
+
+        // 修改的受傷邏輯 (支援護盾防禦扣血)
+        function takeDamage(amt) {
+            if (player.invulnerableTimer <= 0) { 
+                player.hp -= amt; player.invulnerableTimer = player.baseIFrameDuration; 
+                damageFlashTimer = 200; screenShake(); addFloatingText(player.x, player.y - 20, "-HP", "#ef4444"); updateUI();
+                if (player.hp <= 0) { player.hp = 0; triggerRevival(); }
+            }
+        }
+
+        function damageEnemy(e, dmg, sourceX, sourceY) {
+            e.hp -= dmg; e.hitFlash = 100; 
+            if(sourceX !== undefined && sourceY !== undefined && e !== boss) {
+                const kbAngle = Math.atan2(e.y - sourceY, e.x - sourceX);
+                e.x += Math.cos(kbAngle) * 12; e.y += Math.sin(kbAngle) * 12;
+                e.x = Math.max(e.size/2, Math.min(canvas.width - e.size/2, e.x)); e.y = Math.max(e.size/2, Math.min(canvas.height - e.size/2, e.y));
+            }
+            const isCrit = Math.random() > 0.8; const finalDmg = Math.floor(dmg * (isCrit ? 2 : 1));
+            addFloatingText(e.x, e.y - 10, `${finalDmg}`, isCrit ? '#facc15' : '#ffffff');
+
+            if (e.hp <= 0) {
+                spawnParticles(e.x, e.y, 2); score += 10; updateUI();
+                if (e === boss) { bossDefeated(); } else {
+                    enemies.splice(enemies.indexOf(e), 1);
+                    const gemCount = Math.floor(Math.random()*3) + 1; const colors = ['#22c55e', '#3b82f6', '#f59e0b'];
+                    for(let k=0; k<gemCount; k++) {
+                        drops.push({ x: e.x, y: e.y, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10, speed: 0, scatterLife: 300, color: colors[Math.floor(Math.random()*colors.length)] });
+                    }
+                }
+            }
+        }
+
+        function draw() {
+            // 繪製筆記本背景
+            ctx.fillStyle = '#f8fafc'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1;
+            for(let i=0; i<canvas.height; i+=40) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke(); }
+            ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(60, 0); ctx.lineTo(60, canvas.height); ctx.stroke();
+
+            // 繪製場地道具
+            mapItems.forEach(item => {
+                ctx.globalAlpha = Math.min(1, item.life / 1000);
+                ctx.font = `${item.size}px Arial`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                let icon = '';
+                if (item.type === 'buff') {
+                    if(item.subtype === 'heal') icon = '🍎'; else if(item.subtype === 'speed') icon = '⚡'; else if(item.subtype === 'shield') icon = '🛡️'; else if(item.subtype === 'magnet') icon = '🧲'; else if(item.subtype === 'bomb') icon = '💣';
+                    ctx.fillText(icon, item.x, item.y + Math.sin(performance.now()/200)*3);
+                } else {
+                    if(item.subtype === 'web') icon = '🕸️'; else if(item.subtype === 'virus') icon = '🦠'; else if(item.subtype === 'lag') icon = '⏳'; else if(item.subtype === 'fire') icon = '🔥';
+                    ctx.fillText(icon, item.x, item.y);
+                }
+                ctx.globalAlpha = 1.0;
+            });
+
+            // 繪製寶石
+            drops.forEach(d => {
+                ctx.save(); ctx.translate(d.x, d.y); ctx.rotate(Math.PI / 4); ctx.fillStyle = d.color; ctx.fillRect(-4, -4, 8, 8);
+                ctx.strokeStyle = 'white'; ctx.lineWidth = 1; ctx.strokeRect(-4, -4, 8, 8); ctx.restore();
+            });
+            
+            blueDots.forEach(b => {
+                ctx.beginPath(); ctx.arc(b.x, b.y, b.size/2 + Math.sin(b.pulse)*5, 0, Math.PI*2);
+                ctx.fillStyle = '#3b82f6'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = 'white'; ctx.stroke();
+            });
+
+            // 繪製投射物與敵方彈幕
+            projectiles.forEach(p => {
+                if (p.type === 'palette') { ctx.font = `${p.size * (p.life/1000 + 0.5)}px Arial`; ctx.fillText('🎨', p.x, p.y); }
+                else if (p.type === 'cross') { ctx.font = `${p.size}px Arial`; ctx.fillStyle = `rgba(239,68,68,${p.life/500})`; ctx.fillText('➕', p.x, p.y); }
+                else { ctx.font = `${p.size}px Arial`; ctx.fillText('✨', p.x, p.y); }
+            });
+            enemyProjectiles.forEach(ep => {
+                if (ep.type === '❌') {
+                    ctx.font = `20px Arial`; ctx.fillText('❌', ep.x, ep.y);
+                } else {
+                    ctx.beginPath(); ctx.arc(ep.x, ep.y, 5, 0, Math.PI*2); ctx.fillStyle = '#ef4444'; ctx.fill();
+                }
+            });
+
+            // 環繞武器
+            const hw = player.weapons.find(w => w.type === 'highlighter');
+            if (hw) { const hx = player.x + Math.cos(hw.angle) * 70; const hy = player.y + Math.sin(hw.angle) * 70; ctx.font = '25px Arial'; ctx.fillText('🖍️', hx, hy); }
+
+            // 繪製敵人
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            enemies.forEach(e => {
+                ctx.font = `${e.size}px Arial`; ctx.fillText(e.type, e.x, e.y); 
+                if (e.hitFlash > 0) {
+                    ctx.globalAlpha = Math.min(1, e.hitFlash / 100); ctx.beginPath(); ctx.arc(e.x, e.y, e.size/2, 0, Math.PI*2);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; ctx.fill(); ctx.globalAlpha = 1.0;
+                }
+            });
+
+            // 繪製魔王
+            if (boss) {
+                ctx.save(); ctx.translate(boss.x, boss.y); ctx.scale(1.5, 0.7 + Math.sin(performance.now()/200)*0.1); 
+                ctx.font = `${boss.size}px Arial`; ctx.fillText('🐹', 0, 0);
+                if (boss.hitFlash > 0) {
+                    ctx.globalAlpha = Math.min(1, boss.hitFlash / 100); ctx.beginPath(); ctx.arc(0, 0, boss.size/2, 0, Math.PI*2);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; ctx.fill(); ctx.globalAlpha = 1.0;
+                }
+                ctx.restore();
+                ctx.fillStyle = '#cbd5e1'; ctx.fillRect(boss.x - 80, boss.y - boss.size/2 - 20, 160, 8);
+                ctx.fillStyle = '#ef4444'; ctx.fillRect(boss.x - 80, boss.y - boss.size/2 - 20, 160 * (boss.hp / boss.maxHp), 8);
+            }
+
+            // 繪製玩家
+            ctx.font = `${player.size}px Arial`;
+            if (player.invulnerableTimer > 0 && player.shieldTimer <= 0) ctx.globalAlpha = (Math.floor(performance.now() / 150) % 2 === 0) ? 0.3 : 1.0;
+            ctx.fillText('🐹', player.x, player.y); ctx.globalAlpha = 1.0;
+            
+            // 繪製玩家狀態特效
+            if (player.shieldTimer > 0) {
+                ctx.beginPath(); ctx.arc(player.x, player.y, player.size * 0.8, 0, Math.PI*2);
+                ctx.strokeStyle = '#eab308'; ctx.lineWidth = 3; ctx.stroke(); ctx.fillStyle = 'rgba(234, 179, 8, 0.3)'; ctx.fill();
+            }
+            if (player.stunTimer > 0) { ctx.font = '30px Arial'; ctx.fillText('🕸️', player.x, player.y); }
+            if (player.reverseTimer > 0) { ctx.font = '20px Arial'; ctx.fillText('❓', player.x, player.y - 25); }
+
+            ctx.beginPath(); ctx.arc(player.x, player.y, player.magnetRadius, 0, Math.PI*2);
+            ctx.strokeStyle = 'rgba(59, 130, 246, 0.1)'; ctx.lineWidth = 1; ctx.stroke();
+
+            // 粒子與浮動文字
+            particles.forEach(p => { ctx.globalAlpha = Math.max(0, p.life); ctx.font = '12px Arial'; ctx.fillText(p.text, p.x, p.y - p.z); ctx.globalAlpha = 1.0; });
+            floatingTexts.forEach(t => {
+                ctx.save(); ctx.globalAlpha = Math.max(0, t.life); ctx.translate(t.x, t.y); ctx.scale(t.scale, t.scale);
+                ctx.font = '900 18px "Noto Sans TC"'; ctx.fillStyle = t.color; ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+                ctx.strokeText(t.text, 0, 0); ctx.fillText(t.text, 0, 0); ctx.restore();
+            });
+
+            // 畫面紅光暈
+            if (damageFlashTimer > 0) {
+                ctx.globalAlpha = Math.min(0.2, damageFlashTimer / 500); ctx.fillStyle = '#ef4444'; ctx.fillRect(0, 0, canvas.width, canvas.height); ctx.globalAlpha = 1.0;
+            }
+        }
+
+        // ================= 波段與升級 =================
+        function endWave() {
+            clearInterval(window.spawner); if (WAVES[waveIndex].isBoss) { triggerRevival(); return; } 
+            gameState = 'PAUSED'; waveIndex++; showUpgrades();
+        }
+
+        function bossDefeated() {
+            clearInterval(window.spawner); gameState = 'PAUSED'; score += 50000; updateUI(); screenShake();
+            for(let i=0; i<100; i++) spawnParticles(boss.x, boss.y, 1, ['🌟','✨','💥','📄'][Math.floor(Math.random()*4)]);
+            setTimeout(() => { switchScreen('quiz'); startQuiz(); }, 2000);
+        }
+
+        const UPGRADES = [
+            { name: "火力全開", desc: "攻擊速度提升", action: () => { player.weapons[0].cooldown *= 0.75; }, icon: "🔥" },
+            { name: "散彈發射", desc: "魔法發射數量 +1", action: () => { player.weapons[0].multishot++; }, icon: "🪄" },
+            { name: "穿透魔法", desc: "子彈可貫穿多怪", action: () => { player.weapons[0].pierce++; }, icon: "🏹" },
+            { name: "環繞螢光筆", desc: "獲得近戰防身武器", action: () => addWeapon('highlighter'), icon: "🖍️" },
+            { name: "超級磁鐵", desc: "吸收範圍變廣", action: () => player.magnetRadius *= 1.5, icon: "🧲" },
+            { name: "天降十字", desc: "獲得大範圍轟炸", action: () => addWeapon('cross'), icon: "➕" }
+        ];
+
+        function showUpgrades() {
+            switchScreen('upgrade'); const container = document.getElementById('upgrade-cards'); container.innerHTML = '';
+            const shuffled = [...UPGRADES].sort(() => 0.5 - Math.random()); const choices = shuffled.slice(0, 3);
+            choices.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'flex-1 bg-white p-6 rounded-3xl shadow-2xl hover:-translate-y-2 hover:ring-4 hover:ring-amber-400 transition-all text-left flex flex-col items-center group';
+                btn.innerHTML = `<div class="text-6xl mb-4 group-hover:animate-bounce">${opt.icon}</div><h3 class="text-2xl font-black text-blue-600 mb-2">${opt.name}</h3><p class="font-bold text-gray-500 text-center">${opt.desc}</p>`;
+                btn.onclick = () => { opt.action(); updateUI(); switchScreen('game'); gameState = 'PLAYING'; for(let k in keys) keys[k]=false; lastTime = performance.now(); startWave(); };
+                container.appendChild(btn);
+            });
+        }
+
+        // ================= 知識問答與送出 =================
+        const questions = [
+            { q: "在 Google 文件中，如果不小心把網頁關掉，資料會發生什麼事？", opts: ["A. 會全部不見，要重新打", "B. 沒關係，它會「自動存檔」在雲端！"], ans: 1, hint: "哎呀！想想看，我們為什麼叫它「雲端魔法紙」？再試一次吧！" },
+            { q: "要幫這張魔法紙取名字，應該點擊哪裡？", opts: ["A. 左上角的「無標題文件」", "B. 右下角的加號", "C. 點圖片上面的藍點"], ans: 0, hint: "取名字的地方通常在最上面喔！眼睛往左上角看！" },
+            { q: "如果在文件裡插入一張圖片，想要放大，應該拉哪裡才不會變形？", opts: ["A. 隨便拉旁邊的線", "B. 只能拉圖片「四個角落的藍色小點」"], ans: 1, hint: "想一想魔王的下場！拉錯地方鼠鼠會被壓扁喔！" }
+        ];
+        let currentQIndex = 0;
+
+        function startQuiz() { document.getElementById('sunburst').style.opacity = 1; currentQIndex = 0; renderQuestion(); }
+        function renderQuestion() {
+            const qObj = questions[currentQIndex];
+            document.getElementById('quiz-progress').innerText = `${currentQIndex + 1} / 3`; document.getElementById('quiz-question').innerText = `Q${currentQIndex + 1}: ${qObj.q}`;
+            const optionsContainer = document.getElementById('quiz-options'); optionsContainer.innerHTML = '';
+            qObj.opts.forEach((optText, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-left p-4 rounded-2xl border-4 border-gray-200 hover:border-blue-500 hover:bg-blue-50 font-bold text-lg transition-colors';
+                btn.innerText = optText; btn.onclick = () => handleAnswer(index, btn); optionsContainer.appendChild(btn);
+            });
+        }
+        function handleAnswer(selectedIndex, btnElement) {
+            if (selectedIndex === questions[currentQIndex].ans) {
+                btnElement.classList.replace('border-gray-200', 'border-green-500'); btnElement.classList.add('bg-green-500', 'text-white');
+                score += 10000; updateUI(); setNPC("答對了！大師！", "💡", 1000);
+                document.querySelectorAll('#quiz-options button').forEach(b => b.disabled = true);
+                setTimeout(() => { currentQIndex++; if (currentQIndex < questions.length) renderQuestion(); else endPerfectClear(); }, 1000);
+            } else {
+                score = Math.max(0, score - 2000); updateUI();
+                const box = document.getElementById('quiz-box'); box.classList.add('shake-hard', 'border-rose-500');
+                btnElement.classList.add('bg-rose-100', 'border-rose-400', 'text-rose-700'); setNPC(questions[currentQIndex].hint, "💢", 2000);
+                setTimeout(() => { box.classList.remove('shake-hard', 'border-rose-500'); btnElement.classList.remove('bg-rose-100', 'border-rose-400', 'text-rose-700'); }, 1000);
+            }
+        }
+        function endPerfectClear() {
+            switchScreen('clear'); setNPC("完美通關！準備登記成績！", "🎉", 0);
+            document.getElementById('final-score-display').innerText = score.toLocaleString();
+            const idInput = document.getElementById('final-student-id');
+            idInput.value = globalStudentId; validateStudentId(globalStudentId);
+            idInput.addEventListener('input', (e) => { let val = e.target.value.replace(/[^\d]/g, ''); e.target.value = val; validateStudentId(val); });
+        }
+        function validateStudentId(val) {
+            const isValid = /^\d{5}$/.test(val); const btnSubmit = document.getElementById('btn-submit'); const idError = document.getElementById('id-error');
+            if(val.length > 0 && !isValid) { idError.style.opacity = '1'; btnSubmit.disabled = true; } 
+            else if (isValid) { idError.style.opacity = '0'; btnSubmit.disabled = false; } else { idError.style.opacity = '0'; btnSubmit.disabled = true; }
+        }
+        function submitData() {
+            const studentId = document.getElementById('final-student-id').value; if (!/^\d{5}$/.test(studentId)) return;
+            const btnSubmit = document.getElementById('btn-submit'); btnSubmit.disabled = true; btnSubmit.innerText = "發送中...";
+            const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSdvkI-KVxKep2rkA-5LsQmM8BeAqnagjYwwzDE0Q5mEGlIlxg/formResponse";
+            const formData = new FormData(); formData.append("entry.1237898280", `${studentId} (${score}分)`);
+            fetch(formUrl, { method: 'POST', mode: 'no-cors', body: formData }).then(() => {
+                document.getElementById('sunburst').style.opacity = 0; switchScreen('done'); setNPC("成績已經成功傳送給老師囉！", "💖", 0);
+            }).catch(error => { alert("傳送失敗，請檢查網路連線或稍後再試！"); btnSubmit.disabled = false; btnSubmit.innerText = "重新發送"; });
+        }
+
+        resizeCanvas();
+    </script>
+</body>
+</html>
