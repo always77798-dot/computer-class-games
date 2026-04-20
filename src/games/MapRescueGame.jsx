@@ -203,8 +203,8 @@ export default function MapRescueGame({ onBackToPortal }) {
       addScore(1000);
       nextLevel('level2');
     } else {
-      applyFailPenalty();
-      alert("哎呀！這不是我們的目的地，找找紅色的水滴標記！(扣除 500 分)");
+      applyMinorPenalty();
+      alert("哎呀！這不是我們的目的地，找找紅色的水滴標記！");
     }
   };
 
@@ -237,10 +237,10 @@ export default function MapRescueGame({ onBackToPortal }) {
   const handleL3LocationSelect = (loc) => {
     if (!l3Start) {
       if (loc === '土城國小') { setL3Start(loc); addScore(500); }
-      else { applyFailPenalty(); alert('起點設定錯誤，請看對話提示！(扣除 500 分)'); }
+      else { applyMinorPenalty(); alert('起點設定錯誤，請看對話提示！'); }
     } else if (!l3End) {
       if (loc === '土城圖書館') { setL3End(loc); addScore(500); }
-      else { applyFailPenalty(); alert('終點設定錯誤，請看對話提示！(扣除 500 分)'); }
+      else { applyMinorPenalty(); alert('終點設定錯誤，請看對話提示！'); }
     }
   };
   const handleL3Transport = (mode) => {
@@ -248,8 +248,8 @@ export default function MapRescueGame({ onBackToPortal }) {
       addScore(1500);
       nextLevel('gameIntro');
     } else {
-      applyFailPenalty();
-      alert("距離很近又想運動，選這個交通工具不對喔！(扣除 500 分)");
+      applyMinorPenalty();
+      alert("距離很近又想運動，選這個交通工具不對喔！");
     }
   };
 
