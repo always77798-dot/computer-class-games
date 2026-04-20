@@ -287,7 +287,7 @@ export default function MapRescueGame({ onBackToPortal }) {
            }
          }, 500);
       } else {
-         setCombo(1);
+         applyMinorPenalty();
          setG1Mistakes(m => m + 1);
          setTimeout(() => {
            const resetCards = [...newCards];
@@ -343,7 +343,7 @@ export default function MapRescueGame({ onBackToPortal }) {
            return true;
          });
 
-         if (hitObstacle) { setG2Hp(h => h - 1); setCombo(1); }
+         if (hitObstacle) { setG2Hp(h => h - 1); applyMinorPenalty(); }
          if (gotItem) { setG2Score(s => s + 1); addScore(600); }
 
          const spawnRate = isEasy ? 0.03 + (currentSpeed * 0.005) : 0.05 + (currentSpeed * 0.01);
