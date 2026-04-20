@@ -187,7 +187,7 @@ export default function App() {
                 <img src="/LogoT.png" alt="網站Logo" className="w-6 h-6 object-contain" />
               </div>
               <span className="font-black text-xl text-gray-800 tracking-wide">
-                哲民老師的<span className="text-indigo-600">電腦課入口網</span>
+                哲民老師的<span className="text-indigo-600">電腦課複習遊戲</span>
               </span>
             </div>
 
