@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { 
-  Sparkles, ShieldAlert, Play, Home, Gamepad2, LayoutGrid, Code, Maximize, Minimize
+  Sparkles, ShieldAlert, Play, Home, Gamepad2, LayoutGrid, Code, Maximize, Minimize 
 } from 'lucide-react';
 
-// 🌟 引入分離出去的小遊戲模組
+// 🌟 引入分離出去的小遊戲模組 (這些路徑需要你自己確保正確)
 import MouseSurvivalGame from './games/MouseSurvivalGame';
 import GoogleMagicAcademy from './games/GoogleMagicAcademy';
 import AiHeroGame from './games/AiHeroGame';
@@ -43,7 +43,7 @@ const GAMES_LIST = [
     statusBadge: { text: '熱門', type: 'hot' },
     disabled: false
   },
-  { // 修正了原本這裡多一個 { 的語法錯誤
+  {
     id: 'chrome-agent',
     title: '網路小特務探險指南',
     description: '潛入網路世界！跟著特務一起學習精準搜尋、建立百寶箱與無痕隱身術。',
@@ -78,8 +78,11 @@ const PortalHome = ({ onSelectGame }) => {
           </h1>
           <p className="text-xl text-gray-600 font-medium">請從下方選擇你想挑戰的遊戲關卡，透過遊玩來複習電腦課所學的知識吧！</p>
         </div>
-        <div className="w-48 h-48 md:w-64 md:h-64 bg-indigo-50 rounded-full flex items-center justify-center border-8 border-white shadow-inner flex-shrink-0">
-          <Gamepad2 className="w-24 h-24 md:w-32 md:h-32 text-indigo-400" />
+        
+        {/* 💡 修改 2：將大遊戲機圖案 (Gamepad2) 替換為 LogoT.png 圖片 */}
+        {/* 這裡我們將原本的 Gamepad2 替換為 img 標籤，並加上 p-4 內距以確保圖片看起來精緻 */}
+        <div className="w-48 h-48 md:w-64 md:h-64 bg-indigo-50 rounded-full flex items-center justify-center border-8 border-white shadow-inner flex-shrink-0 p-4">
+          <img src="/LogoT.png" alt="網站Logo" className="w-full h-full object-contain" />
         </div>
       </div>
 
@@ -146,19 +149,16 @@ const PortalHome = ({ onSelectGame }) => {
 // ==========================================
 export default function App() {
   const [activeView, setActiveView] = useState('home');
-
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
-      // 請求全螢幕
       document.documentElement.requestFullscreen().then(() => {
         setIsFullscreen(true);
       }).catch((err) => {
         console.error(`全螢幕請求失敗: ${err.message}`);
       });
     } else {
-      // 退出全螢幕
       if (document.exitFullscreen) {
         document.exitFullscreen().then(() => {
           setIsFullscreen(false);
@@ -167,7 +167,6 @@ export default function App() {
     }
   };
 
-  // 監聽鍵盤 Esc 退出全螢幕的事件，確保按鈕狀態同步
   React.useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -194,15 +193,17 @@ export default function App() {
               className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => setActiveView('home')}
             >
-
+              {/* 💡 修改 1：將導覽列原本顯示頭像的 img 標籤替換為 Gamepad2 圖示 */}
+              {/* 我們保留了漸層背景，但將 img 替換為一個白色小小的 Gamepad2 圖示 */}
               <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-2 rounded-lg shadow-sm flex items-center justify-center">
-                <img src="/LogoT.png" alt="網站Logo" className="w-6 h-6 object-contain" />
+                <Gamepad2 className="w-6 h-6 text-white" />
               </div>
               <span className="font-black text-xl text-gray-800 tracking-wide">
                 哲民老師的<span className="text-indigo-600">電腦課複習遊戲</span>
               </span>
             </div>
 
+            <div className="flex items-center gap-3">
               <button 
                 onClick={toggleFullscreen}
                 className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 px-4 py-2 rounded-full text-white font-bold text-sm transition-all active:scale-95 shadow-md"
@@ -210,15 +211,16 @@ export default function App() {
                 {isFullscreen ? <Minimize className="w-4 h-4 text-emerald-400" /> : <Maximize className="w-4 h-4 text-blue-400" />}
                 <span className="hidden sm:inline">{isFullscreen ? '退出全螢幕' : '全螢幕模式'}</span>
               </button>
-            
-            {activeView !== 'home' && (
-              <button 
-                onClick={() => setActiveView('home')}
-                className="flex items-center gap-2 text-sm font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full transition-colors"
-              >
-                <Home size={16} /> 回大廳
-              </button>
-            )}
+              
+              {activeView !== 'home' && (
+                <button 
+                  onClick={() => setActiveView('home')}
+                  className="flex items-center gap-2 text-sm font-bold bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-full transition-colors"
+                >
+                  <Home size={16} /> 回大廳
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </nav>
@@ -230,28 +232,22 @@ export default function App() {
         )}
         
         {/* 🌟 在此配置路由：載入獨立的小遊戲組件 */}
-
         {activeView === 'mouse-survival' && (
           <MouseSurvivalGame onBackToPortal={() => setActiveView('home')} />
         )}
-
         {activeView === 'google-magic-academy' && (
           <GoogleMagicAcademy onBackToPortal={() => setActiveView('home')} />
         )}
-        
         {activeView === 'ai-heroes' && (
           <AiHeroGame onBackToPortal={() => setActiveView('home')} />
         )}
-
         {/* 🌟 新增的網路小特務路由顯示邏輯 */}
         {activeView === 'chrome-agent' && (
           <ChromeAgentGame onBackToPortal={() => setActiveView('home')} />
         )}
-
         {activeView === 'space-camp' && (
           <SpaceCampGame onBackToPortal={() => setActiveView('home')} />
         )}
-
       </main>
 
       {/* 全域 CSS 動畫設定 */}
