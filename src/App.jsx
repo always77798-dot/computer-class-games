@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 
 // 🌟 引入分離出去的小遊戲模組
+import GoogleMagicAcademy from './games/GoogleMagicAcademy';
 import AiHeroGame from './games/AiHeroGame';
 import ChromeAgentGame from './games/ChromeAgentGame';
 import SpaceCampGame from './games/SpaceCampGame';
@@ -12,6 +13,15 @@ import SpaceCampGame from './games/SpaceCampGame';
 // 1. 遊戲資料設定區 (可在此新增遊戲資訊)
 // ==========================================
 const GAMES_LIST = [
+  { 
+    id: 'google-magic-academy',
+    title: '雲端魔法學院',
+    description: '多項實作任務、刺激的雲端防禦戰與最終的魔法測驗！',
+    icon: '🪄',
+    color: 'bg-indigo-100 border-indigo-400 text-indigo-800',
+    tags: ['塔防遊戲', '雲端硬碟', '聯絡人', '資訊安全'],
+    disabled: false 
+  },
   {
     id: 'ai-heroes',
     title: 'AI 小尖兵課堂測驗',
@@ -160,6 +170,11 @@ export default function App() {
         )}
         
         {/* 🌟 在此配置路由：載入獨立的小遊戲組件 */}
+
+        {activeView === 'google-magic-academy' && (
+          <GoogleMagicAcademy onBackToPortal={() => setActiveView('home')} />
+        )}
+        
         {activeView === 'ai-heroes' && (
           <AiHeroGame onBackToPortal={() => setActiveView('home')} />
         )}
