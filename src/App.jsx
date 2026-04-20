@@ -20,7 +20,7 @@ const GAMES_LIST = [
     description: '在 Google 文件模擬器中閃避怪獸，體驗刺激的割草生存戰與知識大考驗！',
     icon: <span className="text-4xl leading-none">🐹</span>,
     color: 'bg-amber-100 border-amber-400 text-amber-800',
-    tags: ['114-3年級', '尚未開放', '生存割草', '雲端文件'],
+    tags: ['114-3下', '尚未開放', '生存割草', '雲端文件'],
     disabled: true
   },
   { 
@@ -29,7 +29,7 @@ const GAMES_LIST = [
     description: '多項實作任務、刺激的雲端防禦戰與最終的魔法測驗！',
     icon: <span className="text-4xl leading-none">🪄</span>,
     color: 'bg-indigo-100 border-indigo-400 text-indigo-800',
-    tags: ['114-3年級', '塔防遊戲', '雲端應用', '資訊安全'],
+    tags: ['114-3下', '塔防遊戲', '雲端應用', '資訊安全'],
     disabled: false 
   },
   {
@@ -38,7 +38,7 @@ const GAMES_LIST = [
     description: '認識 ChatGPT、Gemini、Copilot 等 AI 英雄，並透過闖關與問答完成測驗！',
     icon: <Sparkles className="w-8 h-8 text-yellow-500" />,
     color: 'bg-gradient-to-br from-indigo-400 to-purple-800 text-white border-transparent',
-    tags: ['114-3年級', '動作闖關', 'AI模型知識'],
+    tags: ['114-3下', '動作闖關', 'AI模型知識'],
     disabled: false
   },
   { // 修正了原本這裡多一個 { 的語法錯誤
@@ -47,7 +47,7 @@ const GAMES_LIST = [
     description: '潛入網路世界！跟著特務一起學習精準搜尋、建立百寶箱與無痕隱身術。',
     icon: <span className="text-4xl leading-none">🕵️‍♂️</span>,
     color: 'bg-emerald-100 border-emerald-400 text-emerald-800',
-    tags: ['114-3年級', '滑塊拼圖', '隱私安全', '瀏覽器'],
+    tags: ['114-3下', '滑塊拼圖', '隱私安全', '瀏覽器'],
     disabled: false
   },
   { 
@@ -56,7 +56,7 @@ const GAMES_LIST = [
   description: '跟著特務一起完成 4 項基地訓練：攔截IP、視窗縮放、自訂Chrome與引擎測速！', 
   icon: <span className="text-4xl leading-none">🚀</span>, 
   color: 'bg-blue-100 border-blue-400 text-blue-800', 
-  tags: ['114-3年級', '互動闖關', '瀏覽器','網路知識'], 
+  tags: ['114-3下', '互動闖關', '瀏覽器','網路知識'], 
   disabled: false 
 }
 ];
