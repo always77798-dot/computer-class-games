@@ -89,15 +89,15 @@ const PortalHome = ({ onSelectGame }) => {
           <p className="text-xl text-gray-600 font-medium">請從下方選擇你想挑戰的遊戲關卡，透過遊玩來複習電腦課所學的知識吧！</p>
         </div>
         
-        {/* 💡 修改 2：將 LogoT.png 圖片替換為 LogoT.mp4 循環播放影片 */}
-        <div className="w-48 h-48 md:w-64 md:h-64 bg-indigo-50 rounded-full flex items-center justify-center border-8 border-white shadow-inner flex-shrink-0 p-4 overflow-hidden">
+        {/* 💡 修改：改為適應 16:9 比例的圓角長方形容器 */}
+        <div className="w-64 md:w-80 lg:w-96 aspect-video bg-indigo-50 rounded-2xl flex items-center justify-center border-4 border-white shadow-xl flex-shrink-0 overflow-hidden">
           <video 
             src="/LogoT.mp4" 
             autoPlay 
             loop 
             muted 
             playsInline
-            className="w-full h-full object-contain rounded-full" 
+            className="w-full h-full object-cover" 
           />
         </div>
       </div>
