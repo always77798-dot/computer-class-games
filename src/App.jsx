@@ -18,16 +18,16 @@ const GAMES_LIST = [
     id: 'mouse-survival',
     title: '鼠鼠的文件生存戰',
     description: '在 Google 文件模擬器中閃避怪獸，體驗刺激的割草生存戰與知識大考驗！',
-    icon: '🐹', // 使用鼠鼠 Emoji
+    icon: <span className="text-4xl leading-none">🐹</span>,
     color: 'bg-amber-100 border-amber-400 text-amber-800',
     tags: ['尚未開放', '敬請期待', '生存割草', 'Google文件'],
-    disabled: false
+    disabled: true
   },
   { 
     id: 'google-magic-academy',
     title: '雲端魔法學院',
     description: '多項實作任務、刺激的雲端防禦戰與最終的魔法測驗！',
-    icon: '🪄',
+    icon: <span className="text-4xl leading-none">🪄</span>,
     color: 'bg-indigo-100 border-indigo-400 text-indigo-800',
     tags: ['塔防遊戲', '雲端硬碟', '聯絡人', '資訊安全'],
     disabled: false 
@@ -37,7 +37,7 @@ const GAMES_LIST = [
     title: 'AI 小尖兵課堂測驗',
     description: '認識 ChatGPT、Gemini、Copilot 等 AI 英雄，並透過闖關與問答完成測驗！',
     icon: <Sparkles className="w-8 h-8 text-yellow-500" />,
-    color: 'bg-gradient-to-br from-indigo-500 to-purple-600',
+    color: 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white border-transparent',
     tags: ['動作闖關', 'AI模型知識'],
     disabled: false
   },
@@ -54,7 +54,7 @@ const GAMES_LIST = [
   id: 'space-camp', 
   title: '星際探險特訓營', 
   description: '跟著特務一起完成 4 項基地訓練：攔截IP、視窗縮放、自訂Chrome與引擎測速！', 
-  icon: '🚀', 
+  icon: <span className="text-4xl leading-none">🚀</span>, 
   color: 'bg-blue-100 border-blue-400 text-blue-800', 
   tags: ['互動闖關', '瀏覽器操作','網路基礎知識'], 
   disabled: false 
