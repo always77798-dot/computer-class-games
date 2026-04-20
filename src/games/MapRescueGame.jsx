@@ -477,7 +477,7 @@ export default function MapRescueGame({ onBackToPortal }) {
     if (nx >= 0 && ny >= 0 && ny < g3Maze.length && nx < g3Maze[0].length) {
       if (g3Maze[ny][nx] !== 1) { 
         setG3Pos({x: nx, y: ny});
-        addScore(100); 
+        addScore(5); 
         if (g3Maze[ny][nx] === 3) { 
           setG3State('won');
           addScore(5000 + (g3Timer * 200));
