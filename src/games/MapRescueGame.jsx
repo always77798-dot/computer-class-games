@@ -256,7 +256,7 @@ export default function MapRescueGame({ onBackToPortal }) {
   // ---------------- Game 1: Memory Match ----------------
   useEffect(() => {
     if (gameState === 'game1' && g1Status === 'playing') {
-      if (g1Timer <= 0) { setG1Status('timeout'); applyFailPenalty(); return; }
+      if (g1Timer <= 0) { setG1Status('timeout'); applyMiddlePenalty(); return; }
       const timerId = setInterval(() => setG1Timer(t => t - 1), 1000);
       return () => clearInterval(timerId);
     }
@@ -390,7 +390,7 @@ export default function MapRescueGame({ onBackToPortal }) {
   }, [gameState, g2State, g2CarLane, g2Score, g2Fails, addScore]);
 
   useEffect(() => {
-    if (g2Hp <= 0 && g2State === 'playing') { setG2State('gameover'); applyFailPenalty(); }
+    if (g2Hp <= 0 && g2State === 'playing') { setG2State('gameover'); applyMiddlePenalty(); }
     const target = g2Fails >= 3 ? 10 : 15; 
     if (g2Score >= target && g2State === 'playing') {
       setG2State('won');
@@ -409,7 +409,7 @@ export default function MapRescueGame({ onBackToPortal }) {
   // ---------------- Game 3: Map Maze ----------------
   useEffect(() => {
     if (gameState === 'game3' && g3State === 'playing') {
-      if (g3Timer <= 0) { setG3State('timeout'); applyFailPenalty(); return; }
+      if (g3Timer <= 0) { setG3State('timeout'); applyMiddlePenalty(); return; }
       const tid = setInterval(() => setG3Timer(t => t - 1), 1000);
       return () => clearInterval(tid);
     }
@@ -437,7 +437,7 @@ export default function MapRescueGame({ onBackToPortal }) {
           // 3. 鬼魂主動撞到玩家
           if (nextPos.x === g3Pos.x && nextPos.y === g3Pos.y) {
             setG3State('caught');
-            applyFailPenalty();
+            applyMiddlePenalty();
           }
           // 4. 紀錄本次的起始點，作為下一次的「上一步」
           ghostLastPosRef.current = prev; 
@@ -459,7 +459,7 @@ export default function MapRescueGame({ onBackToPortal }) {
         // 碰撞鬼魂判定
         if (g3GhostPos && nx === g3GhostPos.x && ny === g3GhostPos.y) {
           setG3State('caught');
-          applyFailPenalty();
+          applyMiddlePenalty();
           return;
         }
         setG3Pos({x: nx, y: ny});
