@@ -71,7 +71,14 @@ export default function MapRescueGame({ onBackToPortal }) {
   const [g1Timer, setG1Timer] = useState(60);
   const [g1Mistakes, setG1Mistakes] = useState(0);
   const [g1Status, setG1Status] = useState('playing'); 
-  const g1Icons = [MapPin, User, Navigation, Car, Train, Footprints];
+  const g1Icons = [
+    { Icon: MapPin, label: '目的地' },
+    { Icon: User, label: '衣夾人' },
+    { Icon: Navigation, label: '導航' },
+    { Icon: Car, label: '開車' },
+    { Icon: Train, label: '大眾交通' },
+    { Icon: Footprints, label: '走路' }
+  ];
 
   // --- GAME 2 States ---
   const [g2Fails, setG2Fails] = useState(0);
@@ -121,8 +128,12 @@ export default function MapRescueGame({ onBackToPortal }) {
   const initG1 = useCallback((fails) => {
     const isEasy = fails >= 3;
     const iconsToUse = isEasy ? g1Icons.slice(0, 4) : g1Icons; 
-    const deck = [...iconsToUse, ...iconsToUse].sort(() => Math.random() - 0.5).map((Icon, idx) => ({ 
-      id: idx, Icon, isFlipped: false, isMatched: false 
+    const deck = [...iconsToUse, ...iconsToUse].sort(() => Math.random() - 0.5).map((item, idx) => ({ 
+      id: idx, 
+      Icon: item.Icon, 
+      label: item.label, 
+      isFlipped: false, 
+      isMatched: false 
     }));
     setG1Cards(deck);
     setG1Flipped([]);
@@ -288,7 +299,8 @@ export default function MapRescueGame({ onBackToPortal }) {
 
     if (newFlipped.length === 2) {
       const [first, second] = newFlipped;
-      if (newCards[first].Icon === newCards[second].Icon) {
+      // 將 .Icon 改為 .label 進行字串比對
+      if (newCards[first].label === newCards[second].label) {
          addScore(800);
          setTimeout(() => {
            const matchedCards = [...newCards];
@@ -296,7 +308,8 @@ export default function MapRescueGame({ onBackToPortal }) {
            matchedCards[second].isMatched = true;
            setG1Cards(matchedCards);
            setG1Flipped([]);
-           setG1Matched(prev => [...prev, newCards[first].Icon]);
+           // 這裡儲存 label 做為已配對的紀錄
+           setG1Matched(prev => [...prev, newCards[first].label]); 
            if (g1Matched.length + 1 === g1Cards.length / 2) {
               setTimeout(() => { addScore(g1Timer * 200); nextLevel('game2'); }, 1000);
            }
@@ -901,7 +914,17 @@ export default function MapRescueGame({ onBackToPortal }) {
                       const isRevealed = card.isFlipped || card.isMatched;
                       return (
                         <button key={idx} onClick={() => handleG1Click(idx)} disabled={isRevealed || g1Flipped.length >= 2} className={`aspect-square rounded-2xl flex items-center justify-center shadow-md transition-all transform duration-300 ${isRevealed ? 'bg-purple-50 border-2 border-purple-300 rotate-y-180' : 'bg-gradient-to-br from-indigo-500 to-purple-600 border-b-4 border-purple-800 hover:-translate-y-1 hover:shadow-xl'}`}>
-                           {isRevealed ? <card.Icon className={`w-12 h-12 md:w-16 md:h-16 ${card.isMatched ? 'text-green-500 animate-pulse' : 'text-purple-600'}`} /> : <MapIcon className="w-8 h-8 text-white opacity-50" />}
+                           {isRevealed ? (
+                           // 外層卡片翻轉了 180 度，這裡把內容再翻轉 180 度負負得正，防止文字變鏡像
+                           <div className="flex flex-col items-center justify-center rotate-y-180">
+                             <card.Icon className={`w-8 h-8 md:w-10 md:h-10 mb-1 md:mb-2 ${card.isMatched ? 'text-green-500 animate-pulse' : 'text-purple-600'}`} />
+                             <span className={`text-sm md:text-base font-black ${card.isMatched ? 'text-green-600' : 'text-purple-800'}`}>
+                               {card.label}
+                             </span>
+                           </div>
+                         ) : (
+                           <MapIcon className="w-8 h-8 text-white opacity-50" />
+                         )}
                         </button>
                       )
                     })}
