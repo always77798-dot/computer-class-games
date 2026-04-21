@@ -77,7 +77,9 @@ export default function MapRescueGame({ onBackToPortal }) {
     { Icon: Navigation, label: '導航' },
     { Icon: Car, label: '開車' },
     { Icon: Train, label: '大眾交通' },
-    { Icon: Footprints, label: '走路' }
+    { Icon: Footprints, label: '走路' },
+    { Icon: Bus, label: '公車站' },
+    { Icon: Building, label: '建築物' }
   ];
 
   // --- GAME 2 States ---
@@ -909,7 +911,7 @@ export default function MapRescueGame({ onBackToPortal }) {
                     </button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-3 md:grid-cols-4 gap-3 md:gap-4 justify-center">
+                  <div className="grid grid-cols-4 gap-2 md:gap-4 justify-center max-w-lg mx-auto">
                     {g1Cards.map((card, idx) => {
                       const isRevealed = card.isFlipped || card.isMatched;
                       return (
