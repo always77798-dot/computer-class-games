@@ -901,7 +901,7 @@ export default function MapRescueGame({ onBackToPortal }) {
                   <p className="text-gray-700 font-bold text-lg md:text-xl leading-relaxed text-center">{levels.gameIntro.task}</p>
                 </div>
                 <button onClick={() => nextLevel('game1')} className="bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white px-10 py-5 rounded-full text-2xl font-bold transition-all transform hover:scale-110 shadow-xl flex items-center justify-center gap-3 mx-auto">
-                   <Play className="w-8 h-8 fill-current" /> 進入街機模式
+                   <Play className="w-8 h-8 fill-current" /> 進入進階關卡
                 </button>
              </div>
           )}
