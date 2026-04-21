@@ -36,7 +36,7 @@ const GAMES_LIST = [
   { 
     id: 'map-rescue', 
     title: '地圖探險', 
-    description: '迷航救援大作戰！運用你的地圖超能力與連擊技巧完成任務！', 
+    description: '迷航救援大作戰！運用你對地圖的認識與操作能力完成任務！', 
     icon: <span className="text-4xl leading-none">'🗺️'</span>, 
     color: 'bg-blue-100 border-blue-400 text-blue-800', 
     tags: ['114-3下', '互動闖關', 'Google 地圖'], 
