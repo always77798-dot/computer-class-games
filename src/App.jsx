@@ -45,7 +45,7 @@ const GAMES_LIST = [
   },
   {
     id: 'ai-heroes',
-    title: 'AI 小尖兵課堂測驗',
+    title: 'AI小尖兵冒險之旅',
     description: '認識 ChatGPT、Gemini、Copilot 等 AI 英雄，並透過闖關與問答完成測驗！',
     icon: <Sparkles className="w-8 h-8 text-yellow-500" />,
     color: 'bg-gradient-to-br from-indigo-400 to-purple-800 text-white border-transparent',
