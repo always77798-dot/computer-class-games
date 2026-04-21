@@ -813,7 +813,7 @@ export default function MapRescueGame({ onBackToPortal }) {
                     </div>
                     <div className="bg-white p-3 rounded-2xl rounded-tl-sm shadow-sm flex-1 text-left border border-gray-200">
                       <p className="text-gray-800 font-bold leading-relaxed text-sm md:text-base">
-                        「放學了！我現在在<span className="text-blue-600">『土城國小』</span>，想去<span className="text-red-500">『土城圖書館』</span>借書。大約 500 公尺，今天天氣晴朗，幫我規劃能最健康(能運動)的交通路線吧！」
+                        「放學了！我現在在<span className="text-blue-600">『土城國小』</span>，想去<span className="text-red-500">『土城圖書館』</span>借書。大約 500 公尺，今天天氣晴朗，幫我規劃能健康又能活動身體交通路線吧！」
                       </p>
                     </div>
                  </div>
