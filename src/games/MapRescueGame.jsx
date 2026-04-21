@@ -10,6 +10,20 @@ import {
 export default function MapRescueGame({ onBackToPortal }) {
   const [gameState, setGameState] = useState('intro');
   const prevGameState = useRef('intro');
+
+  // --- UI Toast State ---
+  const [toastMsg, setToastMsg] = useState(null);
+  const toastTimerRef = useRef(null);
+
+  const showToast = useCallback((msg) => {
+    // 如果已經有計時器在跑，先清除掉，避免連續點擊造成提示閃爍
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToastMsg(msg);
+    // 3秒後自動關閉提示
+    toastTimerRef.current = setTimeout(() => {
+      setToastMsg(null);
+    }, 3000);
+  }, []);
   
   // --- Arcade Score System ---
   const [score, setScore] = useState(0);
@@ -232,7 +246,7 @@ export default function MapRescueGame({ onBackToPortal }) {
       nextLevel('level2');
     } else {
       applyMinorPenalty();
-      alert("哎呀！這不是我們的目的地，找找紅色的水滴標記！");
+      showToast("哎呀！這不是我們的目的地，找找紅色的水滴標記！");
     }
   };
 
@@ -265,10 +279,10 @@ export default function MapRescueGame({ onBackToPortal }) {
   const handleL3LocationSelect = (loc) => {
     if (!l3Start) {
       if (loc === '土城國小') { setL3Start(loc); addScore(500); }
-      else { applyMinorPenalty(); alert('起點設定錯誤，請看對話提示！'); }
+      else { applyMinorPenalty(); showToast('起點設定錯誤，請看對話提示！'); }
     } else if (!l3End) {
       if (loc === '土城圖書館') { setL3End(loc); addScore(500); }
-      else { applyMinorPenalty(); alert('終點設定錯誤，請看對話提示！'); }
+      else { applyMinorPenalty(); showToast('終點設定錯誤，請看對話提示！'); }
     }
   };
   const handleL3Transport = (mode) => {
@@ -277,7 +291,7 @@ export default function MapRescueGame({ onBackToPortal }) {
       nextLevel('gameIntro');
     } else {
       applyMinorPenalty();
-      alert("距離很近又想運動，選這個交通工具不對喔！");
+      showToast("距離很近又想運動，選這個交通工具不對喔！");
     }
   };
 
@@ -586,7 +600,7 @@ export default function MapRescueGame({ onBackToPortal }) {
       });
       setSubmitted(true);
     } catch (e) { 
-      alert("傳送成績失敗，請檢查網路！"); 
+      showToast("傳送成績失敗，請檢查網路！"); 
     }
     setIsSubmitting(false);
   };
@@ -1189,6 +1203,16 @@ export default function MapRescueGame({ onBackToPortal }) {
           )}
         </div>
       </div>
+
+      {/* --- 全局彈跳提示 (Toast) --- */}
+      {toastMsg && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-[100] animate-fade-in drop-shadow-2xl">
+          <div className="bg-red-500 text-white px-6 py-3 md:px-8 md:py-4 rounded-full shadow-2xl font-bold flex items-center gap-3 border-4 border-white/50 backdrop-blur-sm">
+            <AlertTriangle className="w-6 h-6 md:w-8 md:h-8 animate-pulse" />
+            <span className="text-base md:text-lg">{toastMsg}</span>
+          </div>
+        </div>
+      )}
 
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
