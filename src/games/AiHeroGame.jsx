@@ -917,7 +917,7 @@ export default function App() {
         <Sparkles className="absolute -top-8 -left-8 w-16 h-16 text-yellow-400 animate-pulse" />
         <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 drop-shadow-sm mb-4 leading-tight">
           哲民老師的<br/>
-          魔法網路學院
+          AI網路學院
         </h1>
         <h2 className="text-3xl md:text-4xl font-bold text-gray-700 bg-white inline-block px-6 py-2 rounded-full shadow-sm border-2 border-indigo-100 mt-2">
           AI 小尖兵課堂測驗
@@ -927,7 +927,7 @@ export default function App() {
         onClick={startGame}
         className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-3xl font-bold py-5 px-12 rounded-full hover:scale-105 transition-transform shadow-[0_10px_20px_rgba(99,102,241,0.3)] flex items-center justify-center gap-3"
       >
-        <Play fill="currentColor" className="w-8 h-8" /> 展開魔法特訓
+        <Play fill="currentColor" className="w-8 h-8" /> 展開貓險之旅
       </button>
     </div>
   );
