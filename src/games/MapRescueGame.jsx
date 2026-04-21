@@ -262,7 +262,7 @@ export default function MapRescueGame({ onBackToPortal }) {
   const handleL2ClickDrop = () => { if (l2PegmanSelected) setL2State('streetview'); };
 
   const streetMap = [
-    [ { icon: Navigation, title: '筆直的街道', desc: '前方有大馬路，可以往前。', forward: 1, color: 'text-blue-500' }, { icon: Store, title: '便利商店', desc: '右邊有便利商店。', forward: null, color: 'text-orange-500' }, { icon: Ban, title: '施工牆', desc: '後方正在施工。', forward: null, color: 'text-red-500' }, { icon: TreePine, title: '小公園', desc: '左邊有公園。', forward: null, color: 'text-green-500' } ],
+    [ { icon: Navigation, title: '筆直的街道', desc: '前方是學校旁的馬路，可以往前。', forward: 1, color: 'text-blue-500' }, { icon: Store, title: '便利商店', desc: '右邊有便利商店。', forward: null, color: 'text-orange-500' }, { icon: Ban, title: '施工牆', desc: '後方正在施工。', forward: null, color: 'text-red-500' }, { icon: TreePine, title: '小公園', desc: '左邊有公園。', forward: null, color: 'text-green-500' } ],
     [ { icon: Building, title: '學校外牆', desc: '前方看到紅磚牆了！', forward: 2, color: 'text-red-400' }, { icon: Bus, title: '公車站', desc: '右邊有站牌。', forward: null, color: 'text-yellow-600' }, { icon: Navigation, title: '街道', desc: '後方是便利商店。', forward: 0, color: 'text-blue-500' }, { icon: Building, title: '住宅區', desc: '左邊是公寓。', forward: null, color: 'text-gray-500' } ],
     [ { icon: Building, title: '土城國小大門口', desc: '找到了！', forward: null, target: true, color: 'text-red-600' }, { icon: TreePine, title: '大樹', desc: '右邊有榕樹。', forward: null, color: 'text-green-600' }, { icon: Navigation, title: '街道', desc: '後方是走過來的路。', forward: 1, color: 'text-blue-500' }, { icon: Car, title: '停車格', desc: '左邊有汽車。', forward: null, color: 'text-gray-600' } ]
   ];
