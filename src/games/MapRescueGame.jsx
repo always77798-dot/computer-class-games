@@ -631,10 +631,13 @@ export default function MapRescueGame({ onBackToPortal }) {
                 {combo > 1 && (
                   <div className={`font-black text-transparent bg-clip-text bg-gradient-to-r from-orange-300 to-red-400 drop-shadow flex items-center gap-1 ${showComboAnim ? 'animate-bounce scale-110' : ''}`}>
                     <Flame className="w-4 h-4 md:w-5 md:h-5 text-orange-400 fill-orange-400" />
-                    <span className="hidden md:inline">x{combo} COMBO!</span>
-                    <span className="md:hidden">x{combo}</span>
+                    {/* 電腦版顯示 */}
+                    <span className="hidden md:inline">x{combo} COMBO!{combo >= 10 ? ' (MAX)' : ''}</span>
+                    {/* 手機版顯示 */}
+                    <span className="md:hidden">x{combo}{combo >= 10 ? ' (MAX)' : ''}</span>
                   </div>
                 )}
+               
                 <div className={`bg-blue-900/80 rounded-full px-3 py-1 md:px-4 md:py-2 border-2 ${showComboAnim ? 'border-yellow-300 bg-blue-800' : 'border-blue-400'} shadow-inner flex items-center gap-2 transition-colors`}>
                    <Trophy className="w-4 h-4 md:w-5 md:h-5 text-yellow-400" />
                    <span className="font-black text-yellow-400 text-base md:text-xl tracking-wider font-mono">{score.toLocaleString()}</span>
