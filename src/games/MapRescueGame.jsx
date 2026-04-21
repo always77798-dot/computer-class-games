@@ -355,8 +355,10 @@ export default function MapRescueGame({ onBackToPortal }) {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (gameState === 'game2' && g2State === 'playing') {
-        if (e.key === 'ArrowLeft') setG2CarLane(l => Math.max(0, l - 1));
-        if (e.key === 'ArrowRight') setG2CarLane(l => Math.min(2, l + 1));
+        // 支援左方向鍵、小寫 a、大寫 A
+        if (['ArrowLeft', 'a', 'A'].includes(e.key)) setG2CarLane(l => Math.max(0, l - 1));
+        // 支援右方向鍵、小寫 d、大寫 D
+        if (['ArrowRight', 'd', 'D'].includes(e.key)) setG2CarLane(l => Math.min(2, l + 1));
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -521,11 +523,15 @@ export default function MapRescueGame({ onBackToPortal }) {
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (gameState === 'game3' && g3State === 'playing') {
-        if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault();
-        if (e.key === 'ArrowUp') handleMazeMove(0, -1);
-        if (e.key === 'ArrowDown') handleMazeMove(0, 1);
-        if (e.key === 'ArrowLeft') handleMazeMove(-1, 0);
-        if (e.key === 'ArrowRight') handleMazeMove(1, 0);
+        // 將 WASD 加入阻擋預設行為（防止按鍵導致網頁上下左右捲動）
+        const preventKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'w', 'a', 's', 'd', 'W', 'A', 'S', 'D'];
+        if (preventKeys.includes(e.key)) e.preventDefault();
+        
+        // 綁定上下左右與 WASD
+        if (['ArrowUp', 'w', 'W'].includes(e.key)) handleMazeMove(0, -1);
+        if (['ArrowDown', 's', 'S'].includes(e.key)) handleMazeMove(0, 1);
+        if (['ArrowLeft', 'a', 'A'].includes(e.key)) handleMazeMove(-1, 0);
+        if (['ArrowRight', 'd', 'D'].includes(e.key)) handleMazeMove(1, 0);
       }
     };
     window.addEventListener('keydown', handleKeyDown, { passive: false });
@@ -1013,7 +1019,11 @@ export default function MapRescueGame({ onBackToPortal }) {
 
                 <div className="h-20 bg-gray-900 flex justify-between items-center px-4 md:px-12 shrink-0 border-t-2 border-gray-700">
                    <button onClick={() => setG2CarLane(Math.max(0, g2CarLane - 1))} disabled={g2State !== 'playing'} className="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-xl shadow-md border-b-4 border-gray-800 active:border-b-0 active:translate-y-1 transition disabled:opacity-50 w-24 flex justify-center"><ArrowLeft className="w-8 h-8" /></button>
-                   <span className="text-gray-400 font-bold hidden md:inline flex items-center gap-2">支援鍵盤 <kbd className="bg-gray-800 px-2 rounded">◀</kbd> <kbd className="bg-gray-800 px-2 rounded">▶</kbd> 切換</span>
+                   <div className="flex flex-col items-center justify-center">
+                      <span className="text-yellow-400 font-bold hidden md:flex items-center gap-2 text-sm md:text-base animate-pulse shadow-black drop-shadow-md">
+                          ⌨️ 鍵盤控制：使用 <kbd className="bg-gray-700 border-2 border-gray-500 px-2 py-1 rounded text-white shadow-sm">A</kbd> <kbd className="bg-gray-700 border-2 border-gray-500 px-2 py-1 rounded text-white shadow-sm">D</kbd> 或方向鍵 <kbd className="bg-gray-700 border-2 border-gray-500 px-2 py-1 rounded text-white shadow-sm">◀</kbd> <kbd className="bg-gray-700 border-2 border-gray-500 px-2 py-1 rounded text-white shadow-sm">▶</kbd> 閃避路障
+                      </span>
+                   </div>
                    <button onClick={() => setG2CarLane(Math.min(2, g2CarLane + 1))} disabled={g2State !== 'playing'} className="bg-gray-700 hover:bg-gray-600 text-white p-3 rounded-xl shadow-md border-b-4 border-gray-800 active:border-b-0 active:translate-y-1 transition disabled:opacity-50 w-24 flex justify-center"><ArrowRight className="w-8 h-8" /></button>
                 </div>
               </div>
@@ -1088,9 +1098,27 @@ export default function MapRescueGame({ onBackToPortal }) {
                      </div>
                    ))}
                 </div>
+
                 <p className="mt-4 text-sm font-bold text-gray-500 md:hidden">提示：請在迷宮上方滑動手指移動</p>
 
-                <div className="mt-4 hidden md:flex flex-col items-center gap-2">
+                <div className="mt-4 hidden md:flex flex-col items-center bg-indigo-50 p-4 rounded-2xl border-4 border-indigo-200 shadow-md w-full max-w-md mx-auto relative overflow-hidden group hover:border-indigo-400 transition-colors">
+                   <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-100 rounded-bl-full -z-10 group-hover:scale-150 transition-transform"></div>
+                   <span className="text-indigo-800 font-black flex items-center gap-2 mb-3 text-lg">
+                       <Gamepad2 className="w-6 h-6 text-indigo-600 animate-bounce" /> 電腦版鍵盤操作指南
+                   </span>
+                   <div className="flex justify-center gap-6 text-indigo-700 font-bold text-sm">
+                       <div className="flex items-center gap-2">
+                           <span className="bg-white border-2 border-indigo-300 px-3 py-1.5 rounded-lg shadow-sm text-indigo-900">W A S D</span>
+                       </div>
+                       <span className="text-indigo-400">或</span>
+                       <div className="flex items-center gap-2">
+                           <span className="bg-white border-2 border-indigo-300 px-3 py-1.5 rounded-lg shadow-sm text-indigo-900">方向鍵</span>
+                       </div>
+                   </div>
+                   <span className="mt-2 text-xs text-indigo-500 font-bold tracking-wide">按下按鍵即可引導探險家移動</span>
+                </div>
+
+                <div className="mt-4 hidden md:flex flex-col items-center gap-2 opacity-50 hover:opacity-100 transition-opacity">
                    <button onClick={() => handleMazeMove(0, -1)} className="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-xl shadow border-b-4 border-blue-700 active:translate-y-1 active:border-b-0 transition"><ArrowUp className="w-6 h-6" /></button>
                    <div className="flex gap-2">
                      <button onClick={() => handleMazeMove(-1, 0)} className="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-xl shadow border-b-4 border-blue-700 active:translate-y-1 active:border-b-0 transition"><ArrowLeft className="w-6 h-6" /></button>
