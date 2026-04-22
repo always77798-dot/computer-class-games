@@ -10,6 +10,7 @@ import MapRescueGame from './games/MapRescueGame';
 import AiHeroGame from './games/AiHeroGame';
 import ChromeAgentGame from './games/ChromeAgentGame';
 import SpaceCampGame from './games/SpaceCampGame';
+import CheckInSystem from './games/CheckInSystem';
 
 // ==========================================
 // 1. 遊戲資料設定區 (可在此新增遊戲資訊)
@@ -70,6 +71,15 @@ const GAMES_LIST = [
   color: 'bg-blue-100 border-blue-400 text-blue-800', 
   tags: ['114-3下', '互動闖關', '瀏覽器','網路知識'], 
   disabled: false 
+  },
+  {
+    id: 'checkin-system',
+    title: '簽到退系統',
+    description: '提供活動參與人員簽到退功能，並包含主辦單位管理介面。',
+    icon: <span className="text-4xl leading-none">📝</span>,
+    color: 'bg-emerald-100 border-emerald-400 text-emerald-800',
+    tags: ['工具', '簽到退', '管理'],
+    disabled: false
 }
 ];
 
@@ -259,6 +269,9 @@ export default function App() {
         )}
         {activeView === 'space-camp' && (
           <SpaceCampGame onBackToPortal={() => setActiveView('home')} />
+        )}
+        {activeView === 'checkin-system' && (
+          <CheckInSystem onBackToPortal={() => setActiveView('home')} />
         )}
       </main>
 
